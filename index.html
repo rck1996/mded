@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MDed</title>
+  </head>
+  <body>
+    <main class="app">
+      <section class="workspace">
+        <header class="topbar">
+          <div class="brand">
+            <div class="brand-mark" aria-hidden="true">Md</div>
+            <div class="brand-copy">
+              <p class="eyebrow">Editor Markdown</p>
+              <h1>MDed</h1>
+            </div>
+          </div>
+          <div class="view-switcher" aria-label="Modo de vista">
+            <button class="is-selected" type="button" data-view="split">Dividido</button>
+            <button type="button" data-view="editor">Editor</button>
+            <button type="button" data-view="preview">Vista previa</button>
+          </div>
+          <div class="document-actions">
+            <div class="status-cluster">
+              <span id="document-stats">0 palabras</span>
+              <span class="save-status" id="save-status">Guardado</span>
+              <button class="inspector-toggle" id="inspector-toggle" type="button">Sin alertas</button>
+            </div>
+            <div class="button-cluster">
+              <button class="secondary-button" id="focus-mode" type="button">Foco</button>
+              <button class="secondary-button" id="theme-toggle" type="button">Oscuro</button>
+              <details class="actions-menu">
+                <summary class="secondary-button">Acciones</summary>
+                <div class="actions-menu-content">
+                  <span>Copiar</span>
+                  <button id="copy-markdown" type="button">Markdown</button>
+                  <button id="copy-html" type="button">HTML</button>
+                  <button id="copy-confluence" type="button">Confluence</button>
+                  <span>Exportar</span>
+                  <button id="download-markdown" type="button">Descargar .md</button>
+                  <button id="export-html" type="button">HTML</button>
+                  <button id="export-assets" type="button">Assets ZIP</button>
+                  <span>Documento</span>
+                  <button class="danger-action" id="clear-document" type="button">Limpiar contenido</button>
+                </div>
+              </details>
+            </div>
+          </div>
+        </header>
+
+        <div class="layout">
+          <div class="side-tabs" aria-label="Panel lateral">
+            <div class="side-tablist" role="tablist" aria-label="Panel lateral">
+              <button class="is-selected" id="side-tab-documents" type="button" role="tab" aria-selected="true" aria-controls="documents-panel" data-side-panel="documents">Documentos</button>
+              <button id="side-tab-insert" type="button" role="tab" aria-selected="false" aria-controls="insert-panel" data-side-panel="insert">Insertar</button>
+            </div>
+            <button class="side-hide" id="hide-side-panel" type="button">Ocultar</button>
+          </div>
+
+          <aside class="documents-panel" id="documents-panel" role="tabpanel" aria-labelledby="side-tab-documents">
+            <div class="panel-header compact-header">
+              <span>Documentos</span>
+              <button class="panel-toggle" id="new-document" type="button">Nuevo</button>
+            </div>
+            <div class="document-tools">
+              <input id="document-search" type="search" placeholder="Buscar" aria-label="Buscar documentos">
+            </div>
+            <div class="document-list" id="document-list"></div>
+          </aside>
+
+          <aside class="toolbox" id="insert-panel" role="tabpanel" aria-labelledby="side-tab-insert">
+            <div class="toolbox-title">
+              <span>Insertar</span>
+            </div>
+            <section class="tool-group">
+              <h2>Estructura</h2>
+              <div class="tool-grid">
+                <button type="button" data-format="h1"><span>Titulo 1</span><kbd>#</kbd></button>
+                <button type="button" data-format="h2"><span>Titulo 2</span><kbd>##</kbd></button>
+                <button type="button" data-format="h3"><span>Titulo 3</span><kbd>###</kbd></button>
+                <button type="button" data-format="h4"><span>Titulo 4</span><kbd>####</kbd></button>
+                <button type="button" data-format="h5"><span>Titulo 5</span><kbd>#####</kbd></button>
+                <button type="button" data-format="h6"><span>Titulo 6</span><kbd>######</kbd></button>
+                <button type="button" data-format="hr"><span>Separador</span><kbd>---</kbd></button>
+                <button type="button" data-format="toc"><span>Indice</span><kbd>[]</kbd></button>
+              </div>
+            </section>
+
+            <section class="tool-group">
+              <h2>Texto</h2>
+              <div class="tool-grid">
+                <button type="button" data-format="bold"><span>Negrita</span><kbd>**</kbd></button>
+                <button type="button" data-format="italic"><span>Cursiva</span><kbd>*</kbd></button>
+                <button type="button" data-format="strike"><span>Tachado</span><kbd>~~</kbd></button>
+                <button type="button" data-format="inlineCode"><span>Codigo</span><kbd>`</kbd></button>
+                <button type="button" data-format="highlight"><span>Marcado</span><kbd>==</kbd></button>
+                <button type="button" data-format="quote"><span>Cita</span><kbd>&gt;</kbd></button>
+                <button type="button" data-format="callout"><span>Nota</span><kbd>!</kbd></button>
+              </div>
+            </section>
+
+            <section class="tool-group">
+              <h2>Listas</h2>
+              <div class="tool-grid">
+                <button type="button" data-format="ul"><span>Vinetas</span><kbd>-</kbd></button>
+                <button type="button" data-format="ol"><span>Numerada</span><kbd>1.</kbd></button>
+                <button type="button" data-format="task"><span>Tareas</span><kbd>[ ]</kbd></button>
+                <button type="button" data-format="nested"><span>Sublista</span><kbd>--</kbd></button>
+              </div>
+            </section>
+
+            <section class="tool-group">
+              <h2>Contenido</h2>
+              <div class="tool-grid">
+                <button type="button" data-format="link"><span>Enlace</span><kbd>url</kbd></button>
+                <button type="button" data-format="image"><span>Imagen</span><kbd>img</kbd></button>
+                <button type="button" data-format="table"><span>Tabla</span><kbd>| |</kbd></button>
+                <button type="button" data-format="codeBlock"><span>Bloque codigo</span><kbd>{}</kbd></button>
+                <button type="button" data-format="details"><span>Desplegable</span><kbd>...</kbd></button>
+                <button type="button" data-format="footnote"><span>Nota pie</span><kbd>[^]</kbd></button>
+                <button type="button" data-format="definition"><span>Definicion</span><kbd>:</kbd></button>
+                <button type="button" data-format="mermaid"><span>Diagrama</span><kbd>mer</kbd></button>
+              </div>
+            </section>
+          </aside>
+          <button class="insert-rail" id="show-insert" type="button" aria-label="Mostrar paneles" title="Mostrar paneles">
+            <span class="rail-icon" aria-hidden="true">+</span>
+            <span class="rail-label">Paneles</span>
+          </button>
+
+          <section class="editor-panel" aria-label="Editor">
+            <div class="panel-header">
+              <span>Editor</span>
+              <span>Escribe / para insertar bloques o pega una imagen</span>
+            </div>
+            <textarea id="markdown-input" spellcheck="false"># Documento de ejemplo
+
+Escribe aqui tu contenido. Usa los botones de la izquierda si no recuerdas la sintaxis.
+
+## Lista de tareas
+
+- [x] Crear el documento
+- [ ] Revisar el contenido
+- [ ] Descargar como Markdown
+
+## Tabla simple
+
+| Elemento | Estado |
+| --- | --- |
+| Editor | Listo |
+| Markdown | Disponible |
+
+> La vista previa se actualiza automaticamente.</textarea>
+            <div id="editor-host"></div>
+            <div class="slash-menu" id="slash-menu" hidden>
+              <div class="slash-list" id="slash-list" role="listbox" aria-label="Comandos de insercion"></div>
+              <div class="slash-preview" id="slash-preview" aria-label="Vista previa del comando"></div>
+            </div>
+          </section>
+
+          <section class="preview-panel" aria-label="Vista previa">
+            <div class="panel-header">
+              <span>Vista previa</span>
+              <span>El documento renderizado se actualiza al escribir</span>
+            </div>
+            <article id="markdown-preview"></article>
+          </section>
+
+          <aside class="inspector-panel" id="inspector-panel" aria-label="Inspector">
+            <div class="panel-header">
+              <span>Inspector</span>
+              <button class="panel-toggle" id="close-inspector" type="button">Cerrar</button>
+            </div>
+            <section class="inspector-section">
+              <h2>Esquema</h2>
+              <div class="outline-list" id="outline-list"></div>
+            </section>
+            <section class="inspector-section">
+              <h2>Assets</h2>
+              <div class="asset-list" id="asset-list"></div>
+            </section>
+            <section class="inspector-section">
+              <h2>Validacion</h2>
+              <div class="validation-list" id="validation-list"></div>
+            </section>
+          </aside>
+        </div>
+        <button class="focus-exit" id="focus-exit" type="button">Salir de foco</button>
+      </section>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
