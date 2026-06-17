@@ -380,11 +380,17 @@ const renderDocuments = () => {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "document-item";
+    const icon = document.createElement("span");
+    icon.className = "document-icon";
+    icon.textContent = "MD";
+    const meta = document.createElement("span");
+    meta.className = "document-meta";
     const title = document.createElement("span");
     title.textContent = doc.title;
     const date = document.createElement("small");
     date.textContent = new Date(doc.updatedAt).toLocaleDateString();
-    button.append(title, date);
+    meta.append(title, date);
+    button.append(icon, meta);
     button.addEventListener("click", () => {
       activeDocumentId = doc.id;
       storageSet(activeDocumentKey, doc.id);
@@ -513,15 +519,23 @@ const renderDocuments = () => {
     label.type = "button";
     label.className = "folder-label";
     label.addEventListener("click", () => {
+      collapsedFolders[folder.id] = !collapsedFolders[folder.id];
+      setCollapsedFolders(collapsedFolders);
       setActiveFolderId(folder.id);
       renderDocuments();
     });
 
+    const folderIcon = document.createElement("span");
+    folderIcon.className = "folder-icon";
+    folderIcon.textContent = isCollapsed ? "DIR" : "DIR";
     const name = document.createElement("span");
     name.textContent = folder.name;
     const count = document.createElement("small");
     count.textContent = `${folderDocuments.length} ${folderDocuments.length === 1 ? "documento" : "documentos"}`;
-    label.append(name, count);
+    const folderMeta = document.createElement("span");
+    folderMeta.className = "folder-meta";
+    folderMeta.append(name, count);
+    label.append(folderIcon, folderMeta);
 
     const folderActions = document.createElement("details");
     folderActions.className = "folder-actions folder-menu";
@@ -849,6 +863,10 @@ const renderSlashMenu = () => {
     const hint = document.createElement("small");
     hint.textContent = command.hint;
     button.append(title, hint);
+    button.addEventListener("mouseenter", () => {
+      slashState.selected = index;
+      renderSlashMenu();
+    });
     button.addEventListener("mousedown", (event) => {
       event.preventDefault();
       slashState.selected = index;
@@ -861,9 +879,26 @@ const renderSlashMenu = () => {
   const title = document.createElement("strong");
   title.textContent = activeCommand ? activeCommand.title : "Sin resultados";
   slashPreview.appendChild(title);
-  const body = document.createElement(activeCommand ? "pre" : "p");
-  body.textContent = activeCommand ? activeCommand.preview : "Prueba con otro termino.";
-  slashPreview.appendChild(body);
+
+  if (!activeCommand) {
+    const body = document.createElement("p");
+    body.textContent = "Prueba con otro termino.";
+    slashPreview.appendChild(body);
+    return;
+  }
+
+  const rendered = document.createElement("div");
+  rendered.className = "slash-preview-rendered";
+  setSafeHtml(rendered, marked.parse(preprocessMarkdown(activeCommand.preview)));
+
+  const snippetLabel = document.createElement("span");
+  snippetLabel.className = "slash-preview-label";
+  snippetLabel.textContent = "Markdown";
+
+  const snippet = document.createElement("pre");
+  snippet.className = "slash-preview-code";
+  snippet.textContent = activeCommand.preview;
+  slashPreview.append(rendered, snippetLabel, snippet);
 };
 
 const positionSlashMenu = () => {
