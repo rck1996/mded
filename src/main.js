@@ -850,31 +850,8 @@ const getCommandMatches = (query) =>
     ? slashCommands.filter((command) => `${command.title} ${command.hint} ${command.keywords}`.toLowerCase().includes(query))
     : slashCommands;
 
-const renderSlashMenu = () => {
-  slashList.innerHTML = "";
+const renderSlashPreview = () => {
   const activeCommand = slashState.items[slashState.selected];
-
-  slashState.items.forEach((command, index) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = index === slashState.selected ? "slash-item is-selected" : "slash-item";
-    const title = document.createElement("span");
-    title.textContent = command.title;
-    const hint = document.createElement("small");
-    hint.textContent = command.hint;
-    button.append(title, hint);
-    button.addEventListener("mouseenter", () => {
-      slashState.selected = index;
-      renderSlashMenu();
-    });
-    button.addEventListener("mousedown", (event) => {
-      event.preventDefault();
-      slashState.selected = index;
-      executeSlashCommand();
-    });
-    slashList.appendChild(button);
-  });
-
   slashPreview.replaceChildren();
   const title = document.createElement("strong");
   title.textContent = activeCommand ? activeCommand.title : "Sin resultados";
@@ -899,6 +876,38 @@ const renderSlashMenu = () => {
   snippet.className = "slash-preview-code";
   snippet.textContent = activeCommand.preview;
   slashPreview.append(rendered, snippetLabel, snippet);
+};
+
+const updateSlashSelection = (index) => {
+  slashState.selected = index;
+  [...slashList.children].forEach((item, itemIndex) => {
+    item.classList.toggle("is-selected", itemIndex === slashState.selected);
+  });
+  renderSlashPreview();
+};
+
+const renderSlashMenu = () => {
+  slashList.replaceChildren();
+
+  slashState.items.forEach((command, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = index === slashState.selected ? "slash-item is-selected" : "slash-item";
+    const title = document.createElement("span");
+    title.textContent = command.title;
+    const hint = document.createElement("small");
+    hint.textContent = command.hint;
+    button.append(title, hint);
+    button.addEventListener("mouseenter", () => updateSlashSelection(index));
+    button.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      updateSlashSelection(index);
+      executeSlashCommand(command);
+    });
+    slashList.appendChild(button);
+  });
+
+  renderSlashPreview();
 };
 
 const positionSlashMenu = () => {
@@ -938,11 +947,11 @@ const updateSlashMenu = () => {
   openSlashMenu(match);
 };
 
-const executeSlashCommand = () => {
-  const command = slashState.items[slashState.selected];
+const executeSlashCommand = (selectedCommand) => {
+  const command = selectedCommand || slashState.items[slashState.selected];
   if (!command) return;
   editor.dispatch({
-    changes: { from: slashState.start, to: editor.state.selection.main.head, insert: command.preview },
+    changes: { from: slashState.start, to: slashState.end, insert: command.preview },
     selection: { anchor: slashState.start + command.preview.length },
   });
   closeSlashMenu();
@@ -981,14 +990,12 @@ const editorListeners = EditorView.domEventHandlers({
     if (slashState.active) {
       if (event.key === "ArrowDown") {
         event.preventDefault();
-        slashState.selected = Math.min(slashState.selected + 1, slashState.items.length - 1);
-        renderSlashMenu();
+        updateSlashSelection(Math.min(slashState.selected + 1, slashState.items.length - 1));
         return true;
       }
       if (event.key === "ArrowUp") {
         event.preventDefault();
-        slashState.selected = Math.max(slashState.selected - 1, 0);
-        renderSlashMenu();
+        updateSlashSelection(Math.max(slashState.selected - 1, 0));
         return true;
       }
       if (event.key === "Enter") {
