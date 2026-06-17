@@ -2996,3 +2996,129 @@ body {
     justify-content: flex-start;
   }
 }
+
+.document-row {
+  position: relative;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 5px 5px 8px;
+}
+
+.document-item {
+  min-width: 0;
+}
+
+.document-actions-inline,
+.folder-actions {
+  position: relative;
+  display: block;
+  flex-wrap: initial;
+  gap: 0;
+}
+
+.document-actions-inline summary,
+.folder-actions summary {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  background: var(--surface);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  list-style: none;
+}
+
+.document-actions-inline summary::-webkit-details-marker,
+.folder-actions summary::-webkit-details-marker {
+  display: none;
+}
+
+.document-menu-content,
+.folder-menu-content {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  display: grid;
+  gap: 3px;
+  min-width: 158px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 5px;
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-lg);
+}
+
+.document-actions-inline button,
+.folder-actions button {
+  width: 100%;
+  min-height: 30px;
+  justify-content: flex-start;
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: 0 9px;
+  color: var(--text);
+  background: transparent;
+  text-align: left;
+}
+
+.document-actions-inline button:hover,
+.folder-actions button:hover,
+.document-actions-inline summary:hover,
+.folder-actions summary:hover {
+  color: var(--text);
+  background: var(--control-bg-hover);
+}
+
+.folder-actions button:first-child {
+  width: 100%;
+  padding: 0 9px;
+  font-weight: inherit;
+}
+
+.folder-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.folder-row {
+  grid-template-columns: 26px minmax(0, 1fr) 28px;
+}
+
+.folder-label {
+  min-width: 0;
+}
+
+.folder-documents {
+  padding-left: 10px;
+  margin-left: 13px;
+}
+
+.workspace[data-theme="dark"] .document-actions-inline summary,
+.workspace[data-theme="dark"] .folder-actions summary,
+.workspace[data-theme="dark"] .document-menu-content,
+.workspace[data-theme="dark"] .folder-menu-content {
+  border-color: var(--border);
+  background: var(--surface-raised);
+}
+
+.workspace[data-theme="dark"] .document-actions-inline button,
+.workspace[data-theme="dark"] .folder-actions button {
+  color: var(--text);
+  background: transparent;
+}
+
+@media (max-width: 760px) {
+  .folder-row {
+    grid-template-columns: 26px minmax(0, 1fr) 28px;
+  }
+
+  .folder-actions {
+    grid-column: auto;
+  }
+}

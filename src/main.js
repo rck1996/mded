@@ -393,8 +393,13 @@ const renderDocuments = () => {
       renderDocuments();
     });
 
-    const actions = document.createElement("div");
-    actions.className = "document-actions-inline";
+    const actions = document.createElement("details");
+    actions.className = "document-actions-inline document-menu";
+    const actionsSummary = document.createElement("summary");
+    actionsSummary.setAttribute("aria-label", `Acciones de ${doc.title}`);
+    actionsSummary.textContent = "...";
+    const actionsContent = document.createElement("div");
+    actionsContent.className = "document-menu-content";
 
     const rename = document.createElement("button");
     rename.type = "button";
@@ -473,7 +478,8 @@ const renderDocuments = () => {
       renderDocuments();
     });
 
-    actions.append(rename, move, duplicate, close);
+    actionsContent.append(rename, move, duplicate, close);
+    actions.append(actionsSummary, actionsContent);
     row.append(button, actions);
     return row;
   };
@@ -517,12 +523,17 @@ const renderDocuments = () => {
     count.textContent = `${folderDocuments.length} ${folderDocuments.length === 1 ? "documento" : "documentos"}`;
     label.append(name, count);
 
-    const folderActions = document.createElement("div");
-    folderActions.className = "folder-actions";
+    const folderActions = document.createElement("details");
+    folderActions.className = "folder-actions folder-menu";
+    const folderSummary = document.createElement("summary");
+    folderSummary.setAttribute("aria-label", `Acciones de carpeta ${folder.name}`);
+    folderSummary.textContent = "...";
+    const folderMenuContent = document.createElement("div");
+    folderMenuContent.className = "folder-menu-content";
 
     const addDocument = document.createElement("button");
     addDocument.type = "button";
-    addDocument.textContent = "+";
+    addDocument.textContent = "Nuevo documento";
     addDocument.title = "Nuevo documento en esta carpeta";
     addDocument.addEventListener("click", () => {
       const doc = createBlankDocument(folder.id);
@@ -545,7 +556,8 @@ const renderDocuments = () => {
       renderDocuments();
     });
 
-    folderActions.append(addDocument, renameFolder);
+    folderMenuContent.append(addDocument, renameFolder);
+    folderActions.append(folderSummary, folderMenuContent);
     header.append(toggle, label, folderActions);
     group.appendChild(header);
 
