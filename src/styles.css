@@ -3958,11 +3958,13 @@ body {
   display: grid;
   gap: 6px;
   justify-items: start;
+  overflow: visible;
 }
 
 .side-tablist {
   grid-template-columns: repeat(3, 36px);
   justify-content: start;
+  overflow: visible;
 }
 
 .side-tabs button,
@@ -3975,6 +3977,7 @@ body {
   min-height: 36px;
   padding: 0;
   gap: 0;
+  overflow: visible !important;
 }
 
 .side-hide {
@@ -4044,6 +4047,15 @@ body {
 .insert-rail:focus-visible::after {
   opacity: 1;
   transform: translateY(-50%) translateX(0);
+}
+
+.side-tabs button:hover,
+.side-tabs button:focus-visible,
+.side-hide:hover,
+.side-hide:focus-visible,
+.insert-rail:hover,
+.insert-rail:focus-visible {
+  z-index: 31;
 }
 
 .side-tabs button.is-selected,
