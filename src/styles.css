@@ -3952,3 +3952,139 @@ body {
     padding-inline: 8px;
   }
 }
+
+/* Final side-nav mode: icons only with tooltips */
+.side-tabs {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.side-tablist {
+  grid-template-columns: repeat(3, 36px);
+  justify-content: start;
+}
+
+.side-tabs button,
+.side-hide,
+.insert-rail {
+  position: relative;
+  min-width: 36px;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  gap: 0;
+}
+
+.side-hide {
+  margin-top: 2px;
+}
+
+.insert-rail {
+  width: 42px;
+  height: 42px;
+  min-height: 42px;
+}
+
+.side-tabs .nav-label,
+.side-hide .nav-label,
+.insert-rail .rail-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.side-tabs button .nav-icon,
+.side-hide .nav-icon,
+.insert-rail .nav-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.insert-rail .nav-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.side-tabs button::after,
+.side-hide::after,
+.insert-rail::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  z-index: 30;
+  transform: translateY(-50%) translateX(-4px);
+  opacity: 0;
+  pointer-events: none;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1;
+  white-space: nowrap;
+  transition:
+    opacity 140ms var(--ease-out),
+    transform 140ms var(--ease-out);
+}
+
+.side-tabs button:hover::after,
+.side-tabs button:focus-visible::after,
+.side-hide:hover::after,
+.side-hide:focus-visible::after,
+.insert-rail:hover::after,
+.insert-rail:focus-visible::after {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+.side-tabs button.is-selected,
+.side-hide:hover,
+.insert-rail:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 900px) {
+  .side-tablist {
+    grid-template-columns: repeat(3, 36px);
+  }
+
+  .side-tabs {
+    justify-items: stretch;
+  }
+
+  .side-tabs button,
+  .side-hide,
+  .insert-rail,
+  .workspace[data-side-visible="false"] .insert-rail {
+    width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    height: 36px;
+  }
+
+  .side-tabs button::after,
+  .side-hide::after,
+  .insert-rail::after {
+    left: 50%;
+    top: calc(100% + 8px);
+    transform: translateX(-50%) translateY(-4px);
+  }
+
+  .side-tabs button:hover::after,
+  .side-tabs button:focus-visible::after,
+  .side-hide:hover::after,
+  .side-hide:focus-visible::after,
+  .insert-rail:hover::after,
+  .insert-rail:focus-visible::after {
+    transform: translateX(-50%) translateY(0);
+  }
+}
