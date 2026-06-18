@@ -3623,3 +3623,158 @@ body {
     padding: 8px 12px;
   }
 }
+
+/* Text containment and control sizing pass */
+.side-tabs,
+.documents-panel,
+.toolbox,
+.outline-panel,
+.inspector-panel,
+.panel-header,
+.toolbox-title,
+.document-header-actions,
+.document-list,
+.outline-list,
+.tool-grid {
+  min-width: 0;
+}
+
+.side-tabs button,
+.panel-toggle,
+.secondary-button,
+.actions-menu summary,
+.insert-rail,
+.tool-grid button,
+.document-actions-inline summary,
+.folder-actions summary {
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+.side-tabs button,
+.panel-toggle,
+.secondary-button,
+.actions-menu summary,
+.rail-label,
+.tool-grid button span,
+.panel-header span,
+.toolbox-title span,
+.folder-meta > span,
+.document-meta > span,
+.outline-panel .outline-item {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.panel-header,
+.toolbox-title {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.panel-header span,
+.toolbox-title span {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.panel-header span + span,
+.editor-header span + span,
+.preview-header span + span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.document-header-actions {
+  justify-content: flex-end;
+}
+
+.document-header-actions .panel-toggle {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 86px;
+  padding-inline: 8px;
+}
+
+.side-tablist {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.side-tabs button {
+  min-width: 0;
+  padding-inline: 6px;
+  line-height: 1.15;
+}
+
+.side-hide {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folder-meta > span,
+.document-meta > span,
+.outline-panel .outline-item {
+  display: block;
+}
+
+.outline-panel .outline-item {
+  white-space: nowrap;
+}
+
+.tool-grid button {
+  min-height: 36px;
+}
+
+.tool-grid button kbd {
+  flex: 0 0 auto;
+  max-width: 42px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.insert-rail {
+  max-width: 42px;
+}
+
+.rail-label {
+  display: block;
+  max-height: 86px;
+}
+
+@media (max-width: 1180px) {
+  .panel-header span + span,
+  .editor-header span + span,
+  .preview-header span + span {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .panel-header,
+  .toolbox-title {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .insert-rail {
+    max-width: 100%;
+  }
+
+  .rail-label {
+    max-height: none;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  .side-tabs button {
+    font-size: 11px;
+  }
+
+  .document-header-actions .panel-toggle {
+    max-width: 72px;
+  }
+}
