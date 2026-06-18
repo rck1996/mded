@@ -81,14 +81,32 @@ index.html     Application shell
 - Progressive complexity: writing stays central; inspector and actions stay out of the way until needed.
 - Predictable controls: tabs switch lateral tools, actions are grouped, focus mode has a persistent exit.
 
-## Roadmap Ideas
+## Roadmap
 
-- Split large production chunks with dynamic imports.
-- Add encrypted export/import bundles.
-- Add document delete/archive history.
-- Add keyboard shortcuts documentation.
-- Add optional filesystem persistence through the File System Access API.
-- Add automated visual regression checks for light/dark themes.
+### Fase 1
+
+- Buscar y reemplazar dentro del editor.
+- Snapshots / historial de versiones por documento.
+- Renombrado inline en el explorador.
+- Drag and drop en explorador e indice.
+- Eliminar / restaurar documentos y carpetas.
+- Atajos visibles y mejor command palette con `/`.
+
+### Fase 2
+
+- Plegado de secciones por encabezados.
+- Reordenar bloques desde indice o comandos.
+- Favoritos, recientes y filtros en el explorador.
+- Plantillas de documentos.
+- Duplicar, mover, archivar desde menu contextual real.
+- Mejor gestion de assets: renombrar, reemplazar, ordenar y preview mas limpia.
+
+### Fase 3
+
+- Exportacion HTML mas cuidada.
+- Modo presentacion/publicacion para vista limpia.
+- Comentarios o notas internas por bloque.
+- Preferencias del editor: densidad, ancho de lectura, tipografia, tema y line wrap.
 
 ## License
 

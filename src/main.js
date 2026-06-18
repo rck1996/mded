@@ -3,7 +3,8 @@ import { basicSetup, EditorView } from "codemirror";
 import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
 import { markdown } from "@codemirror/lang-markdown";
 import { syntaxHighlighting, defaultHighlightStyle } from "@codemirror/language";
-import { EditorState, Prec } from "@codemirror/state";
+import { openSearchPanel, search, searchKeymap } from "@codemirror/search";
+import { Compartment, EditorState, Prec } from "@codemirror/state";
 import { keymap } from "@codemirror/view";
 import JSZip from "jszip";
 import { marked } from "marked";
@@ -33,6 +34,10 @@ const focusExitButton = document.querySelector("#focus-exit");
 const inspectorToggleButton = document.querySelector("#inspector-toggle");
 const closeInspectorButton = document.querySelector("#close-inspector");
 const themeToggleButton = document.querySelector("#theme-toggle");
+const openGuideButton = document.querySelector("#open-guide");
+const openSearchButton = document.querySelector("#open-search");
+const helpOverlay = document.querySelector("#help-overlay");
+const closeGuideButton = document.querySelector("#close-guide");
 const newDocumentButton = document.querySelector("#new-document");
 const newFolderButton = document.querySelector("#new-folder");
 const documentSearch = document.querySelector("#document-search");
@@ -62,6 +67,7 @@ let feedbackTimer;
 let saveTimer;
 let activeDocumentId;
 let editor;
+const themeCompartment = new Compartment();
 let slashState = {
   active: false,
   start: 0,
@@ -705,7 +711,8 @@ const validateMarkdown = (markdown) => {
 const updateStats = (markdown) => {
   const words = markdown.trim().split(/\s+/).filter(Boolean).length;
   const chars = markdown.length;
-  stats.textContent = `${words} palabras - ${chars} caracteres`;
+  const readingMinutes = Math.max(1, Math.ceil(words / 220));
+  stats.textContent = `${words} palabras - ${chars} caracteres - ${readingMinutes} min`;
 };
 
 const renderMarkdown = (markdown) => {
@@ -720,6 +727,7 @@ const renderMarkdown = (markdown) => {
 
 const setSaveStatus = (value) => {
   saveStatus.textContent = value;
+  saveStatus.dataset.state = value === "Guardando" ? "saving" : "saved";
 };
 
 const saveDocument = () => {
@@ -773,6 +781,48 @@ const showButtonFeedback = (button) => {
   feedbackTimer = setTimeout(() => button.classList.remove("is-active"), 180);
 };
 
+const getFormatButton = (format) => document.querySelector(`[data-format="${format}"]`);
+
+const isModKey = (event) => event.metaKey || event.ctrlKey;
+
+const getThemeExtension = (theme) => (theme === "dark" ? darkEditorTheme : []);
+
+const applyTheme = (theme, { persist = true } = {}) => {
+  workspace.dataset.theme = theme;
+  themeToggleButton.textContent = theme === "dark" ? "Claro" : "Oscuro";
+  if (persist) storageSet(themeKey, theme);
+  if (editor) {
+    editor.dispatch({
+      effects: themeCompartment.reconfigure(getThemeExtension(theme)),
+    });
+  }
+};
+
+const setGuideVisible = (visible) => {
+  helpOverlay.hidden = !visible;
+  workspace.dataset.guideVisible = String(visible);
+  if (visible) {
+    actionsMenu.open = false;
+    closeSlashMenu();
+    return;
+  }
+  requestAnimationFrame(() => editor?.focus());
+};
+
+const syncChromeDensity = () => {
+  const editorOffset = editor?.scrollDOM?.scrollTop || 0;
+  const previewOffset = preview.scrollTop || 0;
+  const compact = Math.max(editorOffset, previewOffset) > 28;
+  workspace.dataset.chrome = compact ? "compact" : "resting";
+};
+
+const openSearchInterface = () => {
+  actionsMenu.open = false;
+  setGuideVisible(false);
+  if (!editor) return;
+  openSearchPanel(editor);
+};
+
 const applyFormat = (format) => {
   const actions = {
     h1: () => insertAtCursor("# Titulo principal"),
@@ -804,6 +854,11 @@ const applyFormat = (format) => {
     mermaid: () => insertAtCursor("```mermaid\ngraph TD\n  A[Idea] --> B[Documento]\n  B --> C[Markdown]\n```"),
   };
   actions[format]?.();
+};
+
+const runFormatShortcut = (format) => {
+  applyFormat(format);
+  showButtonFeedback(getFormatButton(format));
 };
 
 const slashCommands = [
@@ -987,6 +1042,25 @@ const editorTheme = EditorView.theme({
 
 const editorListeners = EditorView.domEventHandlers({
   keydown(event) {
+    if (isModKey(event) && !event.altKey) {
+      const key = event.key.toLowerCase();
+      if (key === "b") {
+        event.preventDefault();
+        runFormatShortcut("bold");
+        return true;
+      }
+      if (key === "i") {
+        event.preventDefault();
+        runFormatShortcut("italic");
+        return true;
+      }
+      if (key === "k") {
+        event.preventDefault();
+        runFormatShortcut("link");
+        return true;
+      }
+    }
+
     if (slashState.active) {
       if (event.key === "ArrowDown") {
         event.preventDefault();
@@ -1040,6 +1114,7 @@ const editorListeners = EditorView.domEventHandlers({
   },
   scroll() {
     if (slashState.active) positionSlashMenu();
+    syncChromeDensity();
   },
 });
 
@@ -1052,11 +1127,12 @@ const createEditor = (markdownText) => {
         basicSetup,
         history(),
         markdown(),
+        search({ top: true }),
         syntaxHighlighting(defaultHighlightStyle),
         editorTheme,
-        storageGet(themeKey) === "dark" ? darkEditorTheme : [],
+        themeCompartment.of(getThemeExtension(storageGet(themeKey) === "dark" ? "dark" : "light")),
         editorListeners,
-        Prec.highest(keymap.of([indentWithTab, ...defaultKeymap, ...historyKeymap])),
+        Prec.highest(keymap.of([indentWithTab, ...searchKeymap, ...defaultKeymap, ...historyKeymap])),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) syncDocument();
         }),
@@ -1177,6 +1253,7 @@ const setFocusMode = (enabled) => {
   focusModeButton.textContent = enabled ? "Salir foco" : "Foco";
   storageSet(focusKey, String(enabled));
   closeSlashMenu();
+  if (enabled) setGuideVisible(false);
   refreshEditorLayout();
 };
 
@@ -1269,34 +1346,88 @@ closeInspectorButton.addEventListener("click", () => {
 
 themeToggleButton.addEventListener("click", () => {
   const next = workspace.dataset.theme === "dark" ? "light" : "dark";
-  storageSet(themeKey, next);
-  window.location.reload();
+  applyTheme(next);
 });
 
 preview.addEventListener("scroll", () => {
   closeSlashMenu();
+  syncChromeDensity();
+});
+
+openGuideButton.addEventListener("click", () => {
+  setGuideVisible(true);
+});
+
+closeGuideButton.addEventListener("click", () => {
+  setGuideVisible(false);
+});
+
+openSearchButton.addEventListener("click", () => {
+  openSearchInterface();
 });
 
 document.addEventListener("click", (event) => {
   if (!slashMenu.contains(event.target) && !editorHost.contains(event.target)) closeSlashMenu();
   if (!actionsMenu.contains(event.target)) actionsMenu.open = false;
+  if (!helpOverlay.hidden && event.target === helpOverlay) setGuideVisible(false);
 });
 
 document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    if (!helpOverlay.hidden) {
+      setGuideVisible(false);
+      return;
+    }
+    if (slashState.active) {
+      closeSlashMenu();
+      return;
+    }
+    if (actionsMenu.open) {
+      actionsMenu.open = false;
+      return;
+    }
+  }
+
   if (event.key === "Escape" && workspace.dataset.focus === "true") {
     setFocusMode(false);
+    return;
+  }
+
+  if (event.key === "F1") {
+    event.preventDefault();
+    setGuideVisible(true);
+    return;
+  }
+
+  if (isModKey(event) && event.shiftKey && event.key.toLowerCase() === "h") {
+    event.preventDefault();
+    openSearchInterface();
+    return;
+  }
+
+  if (isModKey(event) && event.shiftKey && event.key.toLowerCase() === "f") {
+    event.preventDefault();
+    setFocusMode(workspace.dataset.focus !== "true");
+    return;
+  }
+
+  if (isModKey(event) && event.key === ".") {
+    event.preventDefault();
+    setInspectorVisible(workspace.dataset.inspectorVisible !== "true");
+    return;
   }
 });
 
 const activeDocument = getActiveDocument();
 activeDocumentId = activeDocument.id;
 createEditor(activeDocument.markdown);
-workspace.dataset.theme = storageGet(themeKey) || "light";
-themeToggleButton.textContent = workspace.dataset.theme === "dark" ? "Claro" : "Oscuro";
+workspace.dataset.chrome = "resting";
 setSidePanel(storageGet(sidePanelStorageKey) || "documents");
 setInsertPanelVisible(storageGet(insertPanelStorageKey) !== "false");
 setInspectorVisible(storageGet(inspectorStorageKey) === "true");
 setFocusMode(storageGet(focusKey) === "true");
+applyTheme(storageGet(themeKey) || "light", { persist: false });
 renderDocuments();
 renderMarkdown(getMarkdown());
 saveDocument();
+syncChromeDensity();

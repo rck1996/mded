@@ -33,6 +33,10 @@
               <details class="actions-menu">
                 <summary class="secondary-button">Acciones</summary>
                 <div class="actions-menu-content">
+                  <span>Aprender</span>
+                  <button id="open-guide" type="button">Atajos y ayuda</button>
+                  <span>Editar</span>
+                  <button id="open-search" type="button">Buscar y reemplazar</button>
                   <span>Copiar</span>
                   <button id="copy-markdown" type="button">Markdown</button>
                   <button id="copy-html" type="button">HTML</button>
@@ -154,7 +158,7 @@
           <section class="editor-panel" aria-label="Editor">
             <div class="panel-header">
               <span>Editor</span>
-              <span>Escribe / para insertar bloques o pega una imagen</span>
+              <span>Usa / para insertar bloques, pega imagenes o abre Atajos y ayuda</span>
             </div>
             <textarea id="markdown-input" spellcheck="false"># Documento de ejemplo
 
@@ -205,6 +209,52 @@ Escribe aqui tu contenido. Usa los botones de la izquierda si no recuerdas la si
           </aside>
         </div>
         <button class="focus-exit" id="focus-exit" type="button">Salir de foco</button>
+        <div class="help-overlay" id="help-overlay" hidden>
+          <section class="help-dialog" role="dialog" aria-modal="true" aria-labelledby="help-title">
+            <div class="help-header">
+              <div>
+                <p class="help-eyebrow">Atajos visibles</p>
+                <h2 id="help-title">Atajos y guia de escritura</h2>
+              </div>
+              <button class="panel-toggle" id="close-guide" type="button">Cerrar</button>
+            </div>
+            <div class="help-grid">
+              <section class="help-section">
+                <h3>Atajos esenciales</h3>
+                <ul class="shortcut-list">
+                  <li><kbd>/</kbd><span>Inserta bloques con vista previa</span></li>
+                  <li><kbd>Ctrl/Cmd + F</kbd><span>Abre buscar y reemplazar</span></li>
+                  <li><kbd>Ctrl/Cmd + Shift + H</kbd><span>Abre buscar y reemplazar desde cualquier vista</span></li>
+                  <li><kbd>Ctrl/Cmd + B</kbd><span>Negrita sobre la seleccion</span></li>
+                  <li><kbd>Ctrl/Cmd + I</kbd><span>Cursiva sobre la seleccion</span></li>
+                  <li><kbd>Ctrl/Cmd + K</kbd><span>Crea un enlace</span></li>
+                  <li><kbd>Ctrl/Cmd + Shift + F</kbd><span>Activa modo foco</span></li>
+                  <li><kbd>Ctrl/Cmd + .</kbd><span>Abre o cierra el inspector</span></li>
+                  <li><kbd>F1</kbd><span>Abre esta guia</span></li>
+                  <li><kbd>Esc</kbd><span>Cierra menus, guia o foco</span></li>
+                </ul>
+              </section>
+              <section class="help-section">
+                <h3>Bloques utiles</h3>
+                <div class="help-chip-list">
+                  <span>Titulos</span>
+                  <span>Listas</span>
+                  <span>Tareas</span>
+                  <span>Tablas</span>
+                  <span>Enlaces</span>
+                  <span>Imagenes</span>
+                  <span>Codigo</span>
+                  <span>Notas</span>
+                  <span>Diagramas</span>
+                </div>
+                <div class="help-note">
+                  <strong>Flujo recomendado</strong>
+                  <p>Escribe en el editor, usa <kbd>/</kbd> cuando no recuerdes la sintaxis, revisa la vista previa y reutiliza assets desde el inspector cuando pegues imagenes.</p>
+                </div>
+              </section>
+            </div>
+          </section>
+        </div>
       </section>
     </main>
     <script type="module" src="/src/main.js"></script>
