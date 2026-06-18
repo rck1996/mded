@@ -38,6 +38,10 @@ const openGuideButton = document.querySelector("#open-guide");
 const openSearchButton = document.querySelector("#open-search");
 const helpOverlay = document.querySelector("#help-overlay");
 const closeGuideButton = document.querySelector("#close-guide");
+const historyOverlay = document.querySelector("#history-overlay");
+const closeHistoryButton = document.querySelector("#close-history");
+const historyList = document.querySelector("#history-list");
+const historyPreview = document.querySelector("#history-preview");
 const newDocumentButton = document.querySelector("#new-document");
 const newFolderButton = document.querySelector("#new-folder");
 const documentSearch = document.querySelector("#document-search");
@@ -62,11 +66,15 @@ const themeKey = "mded.theme";
 const focusKey = "mded.focus";
 const inspectorStorageKey = "mded.inspectorVisible";
 const defaultFolderId = "general";
+const maxDocumentHistory = 30;
+const snapshotIntervalMs = 60 * 1000;
 
 let feedbackTimer;
 let saveTimer;
 let activeDocumentId;
 let editor;
+let explorerEditState = null;
+let historyState = { documentId: null, snapshotId: null };
 const themeCompartment = new Compartment();
 let slashState = {
   active: false,
@@ -246,7 +254,7 @@ const setSafeHtml = (element, html) => {
 const getDocumentFolderId = (doc) => doc.folderId || defaultFolderId;
 
 const getFolders = () => {
-  const general = { id: defaultFolderId, name: "General", createdAt: 0 };
+  const general = { id: defaultFolderId, name: "General", createdAt: 0, order: 0, deletedAt: null };
   const stored = storageGet(foldersKey);
 
   if (!stored) {
@@ -256,9 +264,9 @@ const getFolders = () => {
 
   try {
     const parsed = JSON.parse(stored);
-    const folders = Array.isArray(parsed) ? parsed.filter((folder) => folder?.id && folder?.name) : [];
+    const folders = Array.isArray(parsed) ? parsed.filter((folder) => folder?.id && folder?.name).map(normalizeFolder) : [];
     const hasGeneral = folders.some((folder) => folder.id === defaultFolderId);
-    return hasGeneral ? folders : [general, ...folders];
+    return sortFolders(hasGeneral ? folders : [general, ...folders]);
   } catch {
     storageSet(foldersKey, JSON.stringify([general]));
     return [general];
@@ -266,14 +274,17 @@ const getFolders = () => {
 };
 
 const setFolders = (folders) => {
-  const general = { id: defaultFolderId, name: "General", createdAt: 0 };
+  const general = { id: defaultFolderId, name: "General", createdAt: 0, order: 0, deletedAt: null };
   const nextFolders = folders.some((folder) => folder.id === defaultFolderId) ? folders : [general, ...folders];
-  storageSet(foldersKey, JSON.stringify(nextFolders));
+  storageSet(
+    foldersKey,
+    JSON.stringify(sortFolders(nextFolders).map((folder, index) => normalizeFolder({ ...folder, order: folder.id === defaultFolderId ? 0 : index }, index))),
+  );
 };
 
 const getActiveFolderId = () => {
   const storedFolderId = storageGet(activeFolderKey);
-  return getFolders().some((folder) => folder.id === storedFolderId) ? storedFolderId : defaultFolderId;
+  return getFolders().some((folder) => folder.id === storedFolderId && !folder.deletedAt) ? storedFolderId : defaultFolderId;
 };
 
 const setActiveFolderId = (folderId) => {
@@ -286,18 +297,85 @@ const setCollapsedFolders = (folders) => {
   setStoredMap(collapsedFoldersKey, folders);
 };
 
+const compareByOrder = (a, b) => (a.order ?? 0) - (b.order ?? 0) || (a.createdAt ?? 0) - (b.createdAt ?? 0);
+
+const sortFolders = (folders) => [...folders].sort(compareByOrder);
+
+const sortDocuments = (documents) =>
+  [...documents].sort((a, b) => {
+    if (getDocumentFolderId(a) !== getDocumentFolderId(b)) return compareByOrder(a, b);
+    return compareByOrder(a, b);
+  });
+
+const createSnapshot = (doc, markdown = doc.markdown, reason = "auto") => ({
+  id: crypto.randomUUID(),
+  title: doc.title,
+  markdown,
+  createdAt: Date.now(),
+  reason,
+});
+
+const normalizeFolder = (folder, index) => ({
+  ...folder,
+  id: folder.id,
+  name: folder.name,
+  createdAt: folder.createdAt ?? Date.now(),
+  order: folder.order ?? index,
+  deletedAt: folder.id === defaultFolderId ? null : folder.deletedAt ?? null,
+});
+
+const normalizeDocument = (doc, index) => {
+  const title = typeof doc.title === "string" && doc.title.trim() ? doc.title : getDocumentTitle(doc.markdown || defaultMarkdown);
+  const markdown = typeof doc.markdown === "string" ? doc.markdown : defaultMarkdown;
+  const history = Array.isArray(doc.history)
+    ? doc.history
+        .filter((snapshot) => snapshot?.id && typeof snapshot.markdown === "string")
+        .map((snapshot) => ({
+          id: snapshot.id,
+          title: snapshot.title || title,
+          markdown: snapshot.markdown,
+          createdAt: snapshot.createdAt || Date.now(),
+          reason: snapshot.reason || "auto",
+        }))
+        .slice(-maxDocumentHistory)
+    : [];
+
+  return {
+    ...doc,
+    id: doc.id,
+    title,
+    markdown,
+    titleManual: Boolean(doc.titleManual),
+    folderId: getDocumentFolderId(doc),
+    createdAt: doc.createdAt ?? doc.updatedAt ?? Date.now(),
+    updatedAt: doc.updatedAt ?? Date.now(),
+    order: doc.order ?? index,
+    deletedAt: doc.deletedAt ?? null,
+    history,
+    lastSnapshotAt: doc.lastSnapshotAt ?? history.at(-1)?.createdAt ?? 0,
+  };
+};
+
 const getDocuments = () => {
   const createInitial = () => {
     const migrated = storageGet(storageKey) || defaultMarkdown;
+    const now = Date.now();
     const initial = [
       {
         id: crypto.randomUUID(),
         title: "Documento de ejemplo",
         markdown: migrated,
+        createdAt: now,
         folderId: defaultFolderId,
-        updatedAt: Date.now(),
+        updatedAt: now,
+        order: 0,
+        deletedAt: null,
+        history: [],
+        lastSnapshotAt: 0,
       },
     ];
+    initial[0].history = [createSnapshot(initial[0], migrated, "initial")];
+    initial[0].lastSnapshotAt = initial[0].history[0].createdAt;
     storageSet(documentsKey, JSON.stringify(initial));
     storageSet(activeDocumentKey, initial[0].id);
     return initial;
@@ -308,9 +386,9 @@ const getDocuments = () => {
     try {
       const parsed = JSON.parse(stored);
       if (!Array.isArray(parsed) || !parsed.length) return createInitial();
-      const migrated = parsed.map((doc) => ({ ...doc, folderId: getDocumentFolderId(doc) }));
+      const migrated = parsed.map((doc, index) => normalizeDocument(doc, index));
       if (JSON.stringify(parsed) !== JSON.stringify(migrated)) setDocuments(migrated);
-      return migrated;
+      return sortDocuments(migrated);
     } catch {
       return createInitial();
     }
@@ -320,25 +398,279 @@ const getDocuments = () => {
 };
 
 const setDocuments = (documents) => {
-  storageSet(documentsKey, JSON.stringify(documents));
+  storageSet(documentsKey, JSON.stringify(sortDocuments(documents).map((doc, index) => ({ ...doc, order: doc.order ?? index }))));
 };
 
-const createBlankDocument = (folderId = getActiveFolderId()) => ({
-  id: crypto.randomUUID(),
-  title: "Nuevo documento",
-  markdown: "# Nuevo documento\n\nEmpieza a escribir aqui.",
-  titleManual: false,
-  folderId,
-  updatedAt: Date.now(),
-});
+const createBlankDocument = (folderId = getActiveFolderId()) => {
+  const now = Date.now();
+  const doc = {
+    id: crypto.randomUUID(),
+    title: "Nuevo documento",
+    markdown: "# Nuevo documento\n\nEmpieza a escribir aqui.",
+    titleManual: false,
+    folderId,
+    createdAt: now,
+    updatedAt: now,
+    order: getDocuments().filter((item) => getDocumentFolderId(item) === folderId).length,
+    deletedAt: null,
+    history: [],
+    lastSnapshotAt: 0,
+  };
+  doc.history = [createSnapshot(doc, doc.markdown, "initial")];
+  doc.lastSnapshotAt = doc.history[0].createdAt;
+  return doc;
+};
 
 const getActiveDocument = () => {
-  const documents = getDocuments();
+  const documents = getDocuments().filter((doc) => !doc.deletedAt);
   const storedActive = storageGet(activeDocumentKey);
   return documents.find((doc) => doc.id === storedActive) || documents[0];
 };
 
 const getDocumentTitle = (markdown) => markdown.match(/^#\s+(.+)$/m)?.[1]?.trim() || "Sin titulo";
+
+const getVisibleFolders = () => getFolders().filter((folder) => !folder.deletedAt);
+
+const getDeletedFolders = () => getFolders().filter((folder) => folder.deletedAt);
+
+const getVisibleDocuments = () => getDocuments().filter((doc) => !doc.deletedAt);
+
+const getDeletedDocuments = () => getDocuments().filter((doc) => doc.deletedAt);
+
+const setDocumentField = (documentId, values) => {
+  setDocuments(getDocuments().map((doc) => (doc.id === documentId ? { ...doc, ...values } : doc)));
+};
+
+const setFolderField = (folderId, values) => {
+  setFolders(getFolders().map((folder) => (folder.id === folderId ? { ...folder, ...values } : folder)));
+};
+
+const ensureActiveDocument = () => {
+  const active = getActiveDocument();
+  if (!active) {
+    const fallback = createBlankDocument(defaultFolderId);
+    setDocuments([fallback, ...getDocuments()]);
+    activeDocumentId = fallback.id;
+    storageSet(activeDocumentKey, fallback.id);
+    setMarkdown(fallback.markdown);
+    setActiveFolderId(defaultFolderId);
+    return fallback;
+  }
+
+  activeDocumentId = active.id;
+  storageSet(activeDocumentKey, active.id);
+  return active;
+};
+
+const captureSnapshot = (documentId, markdown, reason = "auto") => {
+  const documents = getDocuments();
+  const target = documents.find((doc) => doc.id === documentId);
+  if (!target || target.deletedAt) return;
+  const previous = target.history.at(-1);
+  if (previous?.markdown === markdown) return;
+
+  const snapshot = createSnapshot(target, markdown, reason);
+  setDocuments(
+    documents.map((doc) =>
+      doc.id === documentId
+        ? {
+            ...doc,
+            history: [...doc.history, snapshot].slice(-maxDocumentHistory),
+            lastSnapshotAt: snapshot.createdAt,
+          }
+        : doc,
+    ),
+  );
+};
+
+const maybeCaptureSnapshot = (documentId, markdown) => {
+  const target = getDocuments().find((doc) => doc.id === documentId);
+  if (!target || target.deletedAt) return;
+  if (!target.history.length) {
+    captureSnapshot(documentId, markdown, "initial");
+    return;
+  }
+  if (target.history.at(-1)?.markdown === markdown) return;
+  if (Date.now() - (target.lastSnapshotAt || 0) < snapshotIntervalMs) return;
+  captureSnapshot(documentId, markdown, "auto");
+};
+
+const permanentlyDeleteDocument = (documentId) => {
+  if (historyState.documentId === documentId) setHistoryVisible(null);
+  const remaining = getDocuments().filter((doc) => doc.id !== documentId);
+  setDocuments(remaining.length ? remaining : [createBlankDocument(defaultFolderId)]);
+  if (activeDocumentId === documentId) {
+    const nextActive = ensureActiveDocument();
+    setMarkdown(nextActive.markdown);
+  }
+};
+
+const deleteDocument = (documentId) => {
+  if (historyState.documentId === documentId) setHistoryVisible(null);
+  const timestamp = Date.now();
+  setDocuments(
+    getDocuments().map((doc) =>
+      doc.id === documentId
+        ? {
+            ...doc,
+            deletedAt: timestamp,
+          }
+        : doc,
+    ),
+  );
+  if (activeDocumentId === documentId) {
+    const nextActive = ensureActiveDocument();
+    setMarkdown(nextActive.markdown);
+  }
+};
+
+const restoreDocument = (documentId) => {
+  setDocuments(
+    getDocuments().map((doc) =>
+      doc.id === documentId
+        ? {
+            ...doc,
+            deletedAt: null,
+          }
+        : doc,
+    ),
+  );
+};
+
+const permanentlyDeleteFolder = (folderId) => {
+  if (folderId === defaultFolderId) return;
+  if (historyState.documentId && getDocuments().some((doc) => doc.id === historyState.documentId && getDocumentFolderId(doc) === folderId)) setHistoryVisible(null);
+  setFolders(getFolders().filter((folder) => folder.id !== folderId));
+  setDocuments(getDocuments().filter((doc) => getDocumentFolderId(doc) !== folderId));
+  ensureActiveDocument();
+};
+
+const deleteFolder = (folderId) => {
+  if (folderId === defaultFolderId) return;
+  if (historyState.documentId && getDocuments().some((doc) => doc.id === historyState.documentId && getDocumentFolderId(doc) === folderId)) setHistoryVisible(null);
+  const timestamp = Date.now();
+  setFolders(
+    getFolders().map((folder) =>
+      folder.id === folderId
+        ? {
+            ...folder,
+            deletedAt: timestamp,
+          }
+        : folder,
+    ),
+  );
+  setDocuments(
+    getDocuments().map((doc) =>
+      getDocumentFolderId(doc) === folderId
+        ? {
+            ...doc,
+            deletedAt: timestamp,
+          }
+        : doc,
+    ),
+  );
+  if (getActiveFolderId() === folderId) setActiveFolderId(defaultFolderId);
+  ensureActiveDocument();
+};
+
+const restoreFolder = (folderId) => {
+  setFolders(
+    getFolders().map((folder) =>
+      folder.id === folderId
+        ? {
+            ...folder,
+            deletedAt: null,
+          }
+        : folder,
+    ),
+  );
+  setDocuments(
+    getDocuments().map((doc) =>
+      getDocumentFolderId(doc) === folderId
+        ? {
+            ...doc,
+            deletedAt: null,
+          }
+        : doc,
+    ),
+  );
+};
+
+const moveDocumentToFolder = (documentId, folderId, targetOrder = null) => {
+  const documents = getDocuments();
+  const visibleInFolder = documents.filter((doc) => !doc.deletedAt && getDocumentFolderId(doc) === folderId && doc.id !== documentId);
+  const baseOrder = targetOrder ?? visibleInFolder.length;
+  const moved = documents.map((doc) =>
+    doc.id === documentId
+      ? {
+          ...doc,
+          folderId,
+          order: baseOrder,
+          updatedAt: Date.now(),
+        }
+      : doc,
+  );
+
+  const normalized = moved.map((doc) => {
+    if (doc.deletedAt) return doc;
+    const siblings = moved
+      .filter((item) => !item.deletedAt && getDocumentFolderId(item) === getDocumentFolderId(doc))
+      .sort(compareByOrder);
+    const nextOrder = siblings.findIndex((item) => item.id === doc.id);
+    return { ...doc, order: nextOrder < 0 ? doc.order : nextOrder };
+  });
+
+  setDocuments(normalized);
+};
+
+const reorderFolders = (sourceId, targetId) => {
+  if (sourceId === targetId || sourceId === defaultFolderId || targetId === defaultFolderId) return;
+  const folders = getVisibleFolders();
+  const sourceIndex = folders.findIndex((folder) => folder.id === sourceId);
+  const targetIndex = folders.findIndex((folder) => folder.id === targetId);
+  if (sourceIndex < 0 || targetIndex < 0) return;
+  const next = [...folders];
+  const [moved] = next.splice(sourceIndex, 1);
+  next.splice(targetIndex, 0, moved);
+  setFolders([getFolders().find((folder) => folder.id === defaultFolderId), ...next].filter(Boolean));
+};
+
+const reorderDocuments = (sourceId, targetId) => {
+  if (sourceId === targetId) return;
+  const documents = getDocuments();
+  const source = documents.find((doc) => doc.id === sourceId);
+  const target = documents.find((doc) => doc.id === targetId);
+  if (!source || !target || source.deletedAt || target.deletedAt) return;
+  const sourceFolderId = getDocumentFolderId(source);
+  const folderId = getDocumentFolderId(target);
+  const siblings = documents.filter((doc) => !doc.deletedAt && getDocumentFolderId(doc) === folderId && doc.id !== sourceId).sort(compareByOrder);
+  const targetIndex = siblings.findIndex((doc) => doc.id === targetId);
+  siblings.splice(targetIndex < 0 ? siblings.length : targetIndex, 0, { ...source, folderId });
+  const sourceSiblings = documents
+    .filter((doc) => !doc.deletedAt && getDocumentFolderId(doc) === sourceFolderId && doc.id !== sourceId)
+    .sort(compareByOrder);
+  const updatedTargetIds = new Map(siblings.map((doc, index) => [doc.id, index]));
+  const updatedSourceIds = new Map(sourceSiblings.map((doc, index) => [doc.id, index]));
+  setDocuments(
+    documents.map((doc) => {
+      if (updatedTargetIds.has(doc.id)) {
+        return {
+          ...doc,
+          folderId,
+          order: updatedTargetIds.get(doc.id),
+          updatedAt: doc.id === sourceId ? Date.now() : doc.updatedAt,
+        };
+      }
+      if (updatedSourceIds.has(doc.id)) {
+        return {
+          ...doc,
+          order: updatedSourceIds.get(doc.id),
+        };
+      }
+      return doc;
+    }),
+  );
+};
 
 const updateActiveDocument = (markdown) => {
   const documents = getDocuments();
@@ -363,47 +695,217 @@ const setMarkdown = (markdown) => {
   });
 };
 
+const setHistoryVisible = (documentId = null, snapshotId = null) => {
+  historyState = { documentId, snapshotId };
+  historyOverlay.hidden = !documentId;
+  workspace.dataset.historyVisible = String(Boolean(documentId));
+  if (!documentId) {
+    historyList.replaceChildren();
+    historyPreview.innerHTML = '<p class="empty-state">Selecciona una version para ver su contenido.</p>';
+    requestAnimationFrame(() => editor?.focus());
+    return;
+  }
+  actionsMenu.open = false;
+  setGuideVisible(false);
+  closeSlashMenu();
+  renderHistoryPanel();
+};
+
+const renderHistoryPanel = () => {
+  const documentId = historyState.documentId;
+  const target = getDocuments().find((doc) => doc.id === documentId);
+  historyList.replaceChildren();
+  historyPreview.replaceChildren();
+
+  if (!target) {
+    setHistoryVisible(null);
+    return;
+  }
+
+  const snapshots = [...target.history].sort((a, b) => b.createdAt - a.createdAt);
+  const activeSnapshotId = historyState.snapshotId || snapshots[0]?.id || null;
+  historyState.snapshotId = activeSnapshotId;
+
+  snapshots.forEach((snapshot) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = snapshot.id === activeSnapshotId ? "history-item is-selected" : "history-item";
+    const title = document.createElement("strong");
+    title.textContent = snapshot.title || target.title;
+    const meta = document.createElement("span");
+    meta.textContent = `${new Date(snapshot.createdAt).toLocaleString()} · ${snapshot.reason === "manual" ? "manual" : "auto"}`;
+    button.append(title, meta);
+    button.addEventListener("click", () => {
+      historyState.snapshotId = snapshot.id;
+      renderHistoryPanel();
+    });
+    historyList.appendChild(button);
+  });
+
+  const selected = snapshots.find((snapshot) => snapshot.id === activeSnapshotId);
+  if (!selected) {
+    historyPreview.innerHTML = '<p class="empty-state">No hay versiones guardadas.</p>';
+    return;
+  }
+
+  const toolbar = document.createElement("div");
+  toolbar.className = "history-preview-toolbar";
+  const meta = document.createElement("span");
+  meta.textContent = `${new Date(selected.createdAt).toLocaleString()} · ${selected.markdown.length} caracteres`;
+  const actions = document.createElement("div");
+
+  const saveSnapshotButton = document.createElement("button");
+  saveSnapshotButton.type = "button";
+  saveSnapshotButton.className = "panel-toggle";
+  saveSnapshotButton.textContent = "Guardar version actual";
+  saveSnapshotButton.addEventListener("click", () => {
+    captureSnapshot(target.id, getMarkdown(), "manual");
+    renderHistoryPanel();
+    renderDocuments();
+  });
+
+  const restoreButton = document.createElement("button");
+  restoreButton.type = "button";
+  restoreButton.className = "panel-toggle";
+  restoreButton.textContent = "Restaurar";
+  restoreButton.addEventListener("click", () => {
+    captureSnapshot(target.id, getMarkdown(), "manual");
+    setDocumentField(target.id, {
+      markdown: selected.markdown,
+      title: target.titleManual ? target.title : getDocumentTitle(selected.markdown),
+      updatedAt: Date.now(),
+    });
+    if (target.id === activeDocumentId) setMarkdown(selected.markdown);
+    renderMarkdown(selected.markdown);
+    renderDocuments();
+    renderHistoryPanel();
+  });
+
+  actions.append(saveSnapshotButton, restoreButton);
+  toolbar.append(meta, actions);
+
+  const previewContent = document.createElement("pre");
+  previewContent.className = "history-preview-code";
+  previewContent.textContent = selected.markdown;
+
+  historyPreview.append(toolbar, previewContent);
+};
+
 const renderDocuments = () => {
   documentList.replaceChildren();
   const query = documentSearch.value.trim().toLowerCase();
-  const folders = getFolders();
+  const folders = getVisibleFolders();
+  const deletedFolders = getDeletedFolders();
   const collapsedFolders = getCollapsedFolders();
-  const documents = getDocuments().sort((a, b) => b.updatedAt - a.updatedAt);
+  const documents = getVisibleDocuments().sort(compareByOrder);
+  const deletedDocuments = getDeletedDocuments().sort((a, b) => (b.deletedAt || 0) - (a.deletedAt || 0));
   const visibleDocuments = documents.filter((doc) => `${doc.title} ${doc.markdown}`.toLowerCase().includes(query));
 
-  if (!visibleDocuments.length) {
-    const empty = document.createElement("p");
-    empty.className = "empty-state";
-    empty.textContent = query ? "No hay documentos con esa busqueda." : "No hay documentos.";
-    documentList.appendChild(empty);
-    return;
-  }
+  const parsePayload = (event) => {
+    try {
+      return JSON.parse(event.dataTransfer.getData("application/json"));
+    } catch {
+      return null;
+    }
+  };
+
+  const attachDropState = (element) => {
+    element.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      element.classList.add("is-drop-target");
+    });
+    element.addEventListener("dragleave", () => {
+      element.classList.remove("is-drop-target");
+    });
+    element.addEventListener("drop", () => {
+      element.classList.remove("is-drop-target");
+    });
+  };
+
+  const createInlineRename = ({ value, submitText, onSubmit, onCancel }) => {
+    const form = document.createElement("form");
+    form.className = "inline-rename";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = value;
+    input.setAttribute("aria-label", "Renombrar");
+    const save = document.createElement("button");
+    save.type = "submit";
+    save.textContent = submitText;
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.textContent = "Cancelar";
+    cancel.addEventListener("click", () => {
+      explorerEditState = null;
+      onCancel?.();
+      renderDocuments();
+    });
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const nextValue = input.value.trim();
+      if (!nextValue) return;
+      explorerEditState = null;
+      onSubmit(nextValue);
+      renderDocuments();
+    });
+    form.append(input, save, cancel);
+    queueMicrotask(() => input.focus());
+    return form;
+  };
 
   const createDocumentRow = (doc) => {
     const row = document.createElement("div");
     row.className = doc.id === activeDocumentId ? "document-row is-active" : "document-row";
-
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "document-item";
-    const icon = document.createElement("span");
-    icon.className = "document-icon";
-    icon.textContent = "MD";
-    const meta = document.createElement("span");
-    meta.className = "document-meta";
-    const title = document.createElement("span");
-    title.textContent = doc.title;
-    const date = document.createElement("small");
-    date.textContent = new Date(doc.updatedAt).toLocaleDateString();
-    meta.append(title, date);
-    button.append(icon, meta);
-    button.addEventListener("click", () => {
-      activeDocumentId = doc.id;
-      storageSet(activeDocumentKey, doc.id);
-      setActiveFolderId(getDocumentFolderId(doc));
-      setMarkdown(doc.markdown);
-      renderDocuments();
+    row.draggable = true;
+    row.dataset.documentId = doc.id;
+    row.addEventListener("dragstart", (event) => {
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("application/json", JSON.stringify({ type: "document", id: doc.id }));
     });
+    attachDropState(row);
+    row.addEventListener("drop", (event) => {
+      event.preventDefault();
+      const payload = parsePayload(event);
+      if (payload?.type === "document") {
+        reorderDocuments(payload.id, doc.id);
+        renderDocuments();
+      }
+    });
+
+    if (explorerEditState?.type === "document" && explorerEditState.id === doc.id) {
+      row.appendChild(
+        createInlineRename({
+          value: doc.title,
+          submitText: "Guardar",
+          onSubmit: (title) => {
+            setDocumentField(doc.id, { title, titleManual: true, updatedAt: Date.now() });
+          },
+        }),
+      );
+    } else {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "document-item";
+      const icon = document.createElement("span");
+      icon.className = "document-icon";
+      icon.textContent = "MD";
+      const meta = document.createElement("span");
+      meta.className = "document-meta";
+      const title = document.createElement("span");
+      title.textContent = doc.title;
+      const date = document.createElement("small");
+      date.textContent = new Date(doc.updatedAt).toLocaleDateString();
+      meta.append(title, date);
+      button.append(icon, meta);
+      button.addEventListener("click", () => {
+        activeDocumentId = doc.id;
+        storageSet(activeDocumentKey, doc.id);
+        setActiveFolderId(getDocumentFolderId(doc));
+        setMarkdown(doc.markdown);
+        renderDocuments();
+      });
+      row.appendChild(button);
+    }
 
     const actions = document.createElement("details");
     actions.className = "document-actions-inline document-menu";
@@ -417,10 +919,26 @@ const renderDocuments = () => {
     rename.type = "button";
     rename.textContent = "Renombrar";
     rename.addEventListener("click", () => {
-      const title = window.prompt("Nombre del documento", doc.title)?.trim();
-      if (!title) return;
-      setDocuments(getDocuments().map((item) => (item.id === doc.id ? { ...item, title, titleManual: true } : item)));
+      actions.open = false;
+      explorerEditState = { type: "document", id: doc.id };
       renderDocuments();
+    });
+
+    const saveSnapshot = document.createElement("button");
+    saveSnapshot.type = "button";
+    saveSnapshot.textContent = "Guardar version";
+    saveSnapshot.addEventListener("click", () => {
+      actions.open = false;
+      captureSnapshot(doc.id, doc.id === activeDocumentId ? getMarkdown() : doc.markdown, "manual");
+      renderDocuments();
+    });
+
+    const history = document.createElement("button");
+    history.type = "button";
+    history.textContent = "Historial";
+    history.addEventListener("click", () => {
+      actions.open = false;
+      setHistoryVisible(doc.id);
     });
 
     const duplicate = document.createElement("button");
@@ -433,9 +951,14 @@ const renderDocuments = () => {
         title: `${doc.title} copia`,
         titleManual: true,
         folderId: getDocumentFolderId(doc),
+        createdAt: Date.now(),
         updatedAt: Date.now(),
+        order: documents.filter((item) => getDocumentFolderId(item) === getDocumentFolderId(doc)).length,
+        deletedAt: null,
+        history: [...doc.history],
+        lastSnapshotAt: doc.lastSnapshotAt,
       };
-      setDocuments([copy, ...getDocuments()]);
+      setDocuments([...getDocuments(), copy]);
       activeDocumentId = copy.id;
       storageSet(activeDocumentKey, copy.id);
       setActiveFolderId(getDocumentFolderId(copy));
@@ -445,54 +968,26 @@ const renderDocuments = () => {
 
     const move = document.createElement("button");
     move.type = "button";
-    move.textContent = "Mover";
+    move.textContent = "Mover a General";
     move.addEventListener("click", () => {
-      const currentFolder = folders.find((folder) => folder.id === getDocumentFolderId(doc));
-      const folderList = folders.map((folder) => `- ${folder.name}`).join("\n");
-      const targetName = window
-        .prompt(`Mover a carpeta:\n${folderList}`, currentFolder?.name || "General")
-        ?.trim();
-      if (!targetName) return;
-
-      const targetFolder = folders.find((folder) => folder.name.toLowerCase() === targetName.toLowerCase());
-      if (!targetFolder) {
-        window.alert("No encontre esa carpeta.");
-        return;
-      }
-
-      setDocuments(
-        getDocuments().map((item) =>
-          item.id === doc.id ? { ...item, folderId: targetFolder.id, updatedAt: Date.now() } : item,
-        ),
-      );
-      if (doc.id === activeDocumentId) setActiveFolderId(targetFolder.id);
+      actions.open = false;
+      moveDocumentToFolder(doc.id, defaultFolderId);
+      if (doc.id === activeDocumentId) setActiveFolderId(defaultFolderId);
       renderDocuments();
     });
 
-    const close = document.createElement("button");
-    close.type = "button";
-    close.textContent = "Cerrar";
-    close.addEventListener("click", () => {
-      const allDocuments = getDocuments();
-      const isUntouchedNewDocument =
-        doc.title === "Nuevo documento" && doc.markdown.trim() === "# Nuevo documento\n\nEmpieza a escribir aqui.";
-      if (!isUntouchedNewDocument && !window.confirm(`Cerrar "${doc.title}"?`)) return;
-
-      const nextDocuments = allDocuments.filter((item) => item.id !== doc.id);
-      const fallbackDocuments = nextDocuments.length ? nextDocuments : [createBlankDocument(getDocumentFolderId(doc))];
-      const nextActive = doc.id === activeDocumentId ? fallbackDocuments[0] : getActiveDocument();
-
-      setDocuments(fallbackDocuments);
-      activeDocumentId = nextActive.id;
-      storageSet(activeDocumentKey, activeDocumentId);
-      setActiveFolderId(getDocumentFolderId(nextActive));
-      setMarkdown(nextActive.markdown);
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.textContent = "Eliminar";
+    remove.addEventListener("click", () => {
+      actions.open = false;
+      deleteDocument(doc.id);
       renderDocuments();
     });
 
-    actionsContent.append(rename, move, duplicate, close);
+    actionsContent.append(rename, saveSnapshot, history, duplicate, move, remove);
     actions.append(actionsSummary, actionsContent);
-    row.append(button, actions);
+    row.append(actions);
     return row;
   };
 
@@ -507,6 +1002,27 @@ const renderDocuments = () => {
 
     const header = document.createElement("div");
     header.className = "folder-row";
+    header.draggable = folder.id !== defaultFolderId;
+    header.dataset.folderId = folder.id;
+    if (folder.id !== defaultFolderId) {
+      header.addEventListener("dragstart", (event) => {
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("application/json", JSON.stringify({ type: "folder", id: folder.id }));
+      });
+    }
+    attachDropState(header);
+    header.addEventListener("drop", (event) => {
+      event.preventDefault();
+      const payload = parsePayload(event);
+      if (payload?.type === "document") {
+        moveDocumentToFolder(payload.id, folder.id);
+        renderDocuments();
+      }
+      if (payload?.type === "folder") {
+        reorderFolders(payload.id, folder.id);
+        renderDocuments();
+      }
+    });
 
     const isCollapsed = !query && collapsedFolders[folder.id];
     const toggle = document.createElement("button");
@@ -521,27 +1037,45 @@ const renderDocuments = () => {
       renderDocuments();
     });
 
-    const label = document.createElement("button");
-    label.type = "button";
+    const editingFolder = explorerEditState?.type === "folder" && explorerEditState.id === folder.id;
+    const label = document.createElement(editingFolder ? "div" : "button");
+    if (!editingFolder) label.type = "button";
     label.className = "folder-label";
-    label.addEventListener("click", () => {
-      collapsedFolders[folder.id] = !collapsedFolders[folder.id];
-      setCollapsedFolders(collapsedFolders);
-      setActiveFolderId(folder.id);
-      renderDocuments();
-    });
+    if (!editingFolder) {
+      label.addEventListener("click", () => {
+        collapsedFolders[folder.id] = !collapsedFolders[folder.id];
+        setCollapsedFolders(collapsedFolders);
+        setActiveFolderId(folder.id);
+        renderDocuments();
+      });
+    }
 
     const folderIcon = document.createElement("span");
     folderIcon.className = "folder-icon";
     folderIcon.textContent = isCollapsed ? "DIR" : "DIR";
-    const name = document.createElement("span");
-    name.textContent = folder.name;
-    const count = document.createElement("small");
-    count.textContent = `${folderDocuments.length} ${folderDocuments.length === 1 ? "documento" : "documentos"}`;
-    const folderMeta = document.createElement("span");
-    folderMeta.className = "folder-meta";
-    folderMeta.append(name, count);
-    label.append(folderIcon, folderMeta);
+    if (editingFolder) {
+      const folderMeta = document.createElement("span");
+      folderMeta.className = "folder-meta";
+      folderMeta.appendChild(
+        createInlineRename({
+          value: folder.name,
+          submitText: "Guardar",
+          onSubmit: (name) => {
+            setFolderField(folder.id, { name });
+          },
+        }),
+      );
+      label.append(folderIcon, folderMeta);
+    } else {
+      const name = document.createElement("span");
+      name.textContent = folder.name;
+      const count = document.createElement("small");
+      count.textContent = `${folderDocuments.length} ${folderDocuments.length === 1 ? "documento" : "documentos"}`;
+      const folderMeta = document.createElement("span");
+      folderMeta.className = "folder-meta";
+      folderMeta.append(name, count);
+      label.append(folderIcon, folderMeta);
+    }
 
     const folderActions = document.createElement("details");
     folderActions.className = "folder-actions folder-menu";
@@ -570,13 +1104,22 @@ const renderDocuments = () => {
     renameFolder.textContent = "Renombrar";
     renameFolder.disabled = folder.id === defaultFolderId;
     renameFolder.addEventListener("click", () => {
-      const nextName = window.prompt("Nombre de la carpeta", folder.name)?.trim();
-      if (!nextName) return;
-      setFolders(folders.map((item) => (item.id === folder.id ? { ...item, name: nextName } : item)));
+      folderActions.open = false;
+      explorerEditState = { type: "folder", id: folder.id };
       renderDocuments();
     });
 
-    folderMenuContent.append(addDocument, renameFolder);
+    const deleteFolderButton = document.createElement("button");
+    deleteFolderButton.type = "button";
+    deleteFolderButton.textContent = "Eliminar carpeta";
+    deleteFolderButton.disabled = folder.id === defaultFolderId;
+    deleteFolderButton.addEventListener("click", () => {
+      folderActions.open = false;
+      deleteFolder(folder.id);
+      renderDocuments();
+    });
+
+    folderMenuContent.append(addDocument, renameFolder, deleteFolderButton);
     folderActions.append(folderSummary, folderMenuContent);
     header.append(toggle, label, folderActions);
     group.appendChild(header);
@@ -597,6 +1140,83 @@ const renderDocuments = () => {
 
     documentList.appendChild(group);
   });
+
+  if (!visibleDocuments.length && !folders.length) {
+    const empty = document.createElement("p");
+    empty.className = "empty-state";
+    empty.textContent = query ? "No hay documentos con esa busqueda." : "No hay documentos.";
+    documentList.appendChild(empty);
+  }
+
+  if (deletedDocuments.length || deletedFolders.length) {
+    const trash = document.createElement("section");
+    trash.className = "trash-group";
+
+    const heading = document.createElement("div");
+    heading.className = "trash-header";
+    const title = document.createElement("strong");
+    title.textContent = "Papelera";
+    const meta = document.createElement("span");
+    meta.textContent = `${deletedDocuments.length + deletedFolders.length} elementos`;
+    heading.append(title, meta);
+    trash.appendChild(heading);
+
+    deletedFolders.forEach((folder) => {
+      const row = document.createElement("div");
+      row.className = "trash-row";
+      const label = document.createElement("div");
+      label.className = "trash-meta";
+      label.innerHTML = `<strong>${escapeHtml(folder.name)}</strong><span>Carpeta eliminada</span>`;
+      const actions = document.createElement("div");
+      actions.className = "trash-actions";
+      const restore = document.createElement("button");
+      restore.type = "button";
+      restore.textContent = "Restaurar";
+      restore.addEventListener("click", () => {
+        restoreFolder(folder.id);
+        renderDocuments();
+      });
+      const purge = document.createElement("button");
+      purge.type = "button";
+      purge.textContent = "Borrar";
+      purge.addEventListener("click", () => {
+        permanentlyDeleteFolder(folder.id);
+        renderDocuments();
+      });
+      actions.append(restore, purge);
+      row.append(label, actions);
+      trash.appendChild(row);
+    });
+
+    deletedDocuments.forEach((doc) => {
+      const row = document.createElement("div");
+      row.className = "trash-row";
+      const label = document.createElement("div");
+      label.className = "trash-meta";
+      label.innerHTML = `<strong>${escapeHtml(doc.title)}</strong><span>${new Date(doc.deletedAt).toLocaleString()}</span>`;
+      const actions = document.createElement("div");
+      actions.className = "trash-actions";
+      const restore = document.createElement("button");
+      restore.type = "button";
+      restore.textContent = "Restaurar";
+      restore.addEventListener("click", () => {
+        restoreDocument(doc.id);
+        renderDocuments();
+      });
+      const purge = document.createElement("button");
+      purge.type = "button";
+      purge.textContent = "Borrar";
+      purge.addEventListener("click", () => {
+        permanentlyDeleteDocument(doc.id);
+        renderDocuments();
+      });
+      actions.append(restore, purge);
+      row.append(label, actions);
+      trash.appendChild(row);
+    });
+
+    documentList.appendChild(trash);
+  }
 };
 
 const applyHeadingAnchors = () => {
@@ -631,11 +1251,47 @@ const renderFootnotes = (markdown) => {
   preview.appendChild(section);
 };
 
-const renderOutline = (markdown) => {
+const getHeadingSections = (markdown) => {
   const headings = [...markdown.matchAll(/^(#{1,6})\s+(.+)$/gm)].map((match) => ({
     level: match[1].length,
     text: match[2].trim(),
+    start: match.index,
+    heading: match[0],
   }));
+
+  return headings.map((heading, index) => {
+    let end = markdown.length;
+    for (let cursor = index + 1; cursor < headings.length; cursor += 1) {
+      if (headings[cursor].level <= heading.level) {
+        end = headings[cursor].start;
+        break;
+      }
+    }
+    return {
+      ...heading,
+      end,
+      index,
+      block: markdown.slice(heading.start, end).replace(/\s+$/, ""),
+    };
+  });
+};
+
+const moveHeadingSection = (sourceIndex, targetIndex) => {
+  const markdown = getMarkdown();
+  const sections = getHeadingSections(markdown);
+  if (sourceIndex === targetIndex || !sections[sourceIndex] || !sections[targetIndex]) return;
+
+  const source = sections[sourceIndex];
+  const target = sections[targetIndex];
+  const segment = markdown.slice(source.start, source.end);
+  const removed = markdown.slice(0, source.start) + markdown.slice(source.end);
+  const insertionPoint = source.start < target.start ? target.start - segment.length : target.start;
+  const nextMarkdown = `${removed.slice(0, insertionPoint).replace(/\s*$/, "")}\n\n${segment.trim()}\n\n${removed.slice(insertionPoint).replace(/^\s*/, "")}`.trim();
+  setMarkdown(nextMarkdown);
+};
+
+const renderOutline = (markdown) => {
+  const headings = getHeadingSections(markdown);
 
   outlineList.innerHTML = headings.length ? "" : '<p class="empty-state">Sin titulos todavia.</p>';
   headings.forEach((heading) => {
@@ -644,8 +1300,31 @@ const renderOutline = (markdown) => {
     button.className = "outline-item";
     button.style.setProperty("--level", heading.level);
     button.textContent = heading.text;
+    button.draggable = true;
+    button.dataset.index = String(heading.index);
     button.addEventListener("click", () => {
       preview.querySelector(`#${slugify(heading.text)}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    button.addEventListener("dragstart", (event) => {
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("application/json", JSON.stringify({ type: "outline", index: heading.index }));
+    });
+    button.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      button.classList.add("is-drop-target");
+    });
+    button.addEventListener("dragleave", () => {
+      button.classList.remove("is-drop-target");
+    });
+    button.addEventListener("drop", (event) => {
+      event.preventDefault();
+      button.classList.remove("is-drop-target");
+      try {
+        const payload = JSON.parse(event.dataTransfer.getData("application/json"));
+        if (payload?.type === "outline") moveHeadingSection(payload.index, heading.index);
+      } catch {
+        // Ignore malformed drag payloads.
+      }
     });
     outlineList.appendChild(button);
   });
@@ -732,9 +1411,11 @@ const setSaveStatus = (value) => {
 
 const saveDocument = () => {
   const markdown = getMarkdown();
+  maybeCaptureSnapshot(activeDocumentId, markdown);
   updateActiveDocument(markdown);
   storageSet(storageKey, markdown);
   renderDocuments();
+  if (!historyOverlay.hidden && historyState.documentId === activeDocumentId) renderHistoryPanel();
   setSaveStatus("Guardado");
 };
 
@@ -802,6 +1483,8 @@ const setGuideVisible = (visible) => {
   helpOverlay.hidden = !visible;
   workspace.dataset.guideVisible = String(visible);
   if (visible) {
+    historyOverlay.hidden = true;
+    workspace.dataset.historyVisible = "false";
     actionsMenu.open = false;
     closeSlashMenu();
     return;
@@ -819,6 +1502,7 @@ const syncChromeDensity = () => {
 const openSearchInterface = () => {
   actionsMenu.open = false;
   setGuideVisible(false);
+  setHistoryVisible(null);
   if (!editor) return;
   openSearchPanel(editor);
 };
@@ -862,34 +1546,42 @@ const runFormatShortcut = (format) => {
 };
 
 const slashCommands = [
-  ["h1", "Titulo 1", "Encabezado principal", "# Titulo principal", "titulo heading h1 principal"],
-  ["h2", "Titulo 2", "Seccion del documento", "## Subtitulo", "titulo heading h2 subtitulo seccion"],
-  ["h3", "Titulo 3", "Subseccion", "### Seccion", "titulo heading h3 seccion"],
-  ["h4", "Titulo 4", "Apartado menor", "#### Apartado", "titulo heading h4 apartado"],
-  ["h5", "Titulo 5", "Detalle", "##### Detalle", "titulo heading h5 detalle"],
-  ["h6", "Titulo 6", "Nota menor", "###### Nota menor", "titulo heading h6 nota menor"],
-  ["hr", "Separador", "Linea horizontal", "---", "separador linea horizontal divisor"],
-  ["toc", "Indice", "Links a secciones", "## Indice\n\n- [Introduccion](#introduccion)", "indice toc contenido"],
-  ["bold", "Negrita", "Texto importante", "**texto importante**", "negrita bold fuerte"],
-  ["italic", "Cursiva", "Enfasis suave", "*texto en cursiva*", "cursiva italic enfasis"],
-  ["strike", "Tachado", "Texto eliminado", "~~texto tachado~~", "tachado strike"],
-  ["inlineCode", "Codigo inline", "Codigo en linea", "`codigo`", "codigo inline code"],
-  ["highlight", "Marcado", "Texto resaltado", "==texto resaltado==", "marcado resaltado"],
-  ["ul", "Lista con vinetas", "Puntos simples", "- Primer punto\n- Segundo punto", "lista vinetas puntos"],
-  ["ol", "Lista numerada", "Pasos ordenados", "1. Primer paso\n2. Segundo paso", "lista numerada pasos"],
-  ["task", "Lista de tareas", "Checklist con pendientes", "- [x] Tarea completada\n- [ ] Tarea pendiente", "tareas checklist"],
-  ["nested", "Sublista", "Lista anidada", "- Tema principal\n  - Detalle relacionado", "sublista anidada"],
-  ["quote", "Cita", "Bloque destacado", "> Cita o nota destacada", "cita quote"],
-  ["callout", "Nota", "Aclaracion importante", "> **Nota:** escribe aqui una aclaracion importante.", "nota callout aviso"],
-  ["link", "Enlace", "Texto con URL", "[Texto del enlace](https://ejemplo.com)", "link enlace url"],
-  ["image", "Imagen", "Markdown de imagen", "![Descripcion](https://...)", "imagen foto media"],
-  ["table", "Tabla", "Filas y columnas", "| Elemento | Estado |\n| --- | --- |\n| Editor | Listo |", "tabla columnas filas"],
-  ["codeBlock", "Bloque de codigo", "Codigo con lenguaje", "```js\nconsole.log(\"Hola\")\n```", "codigo bloque"],
-  ["details", "Desplegable", "Contenido colapsable", "<details>\n<summary>Ver mas</summary>\n\nContenido oculto\n\n</details>", "desplegable detalles"],
-  ["footnote", "Nota al pie", "Referencia con explicacion", "Texto con nota[^1]\n\n[^1]: Explicacion", "nota pie footnote"],
-  ["definition", "Definicion", "Termino y descripcion", "Termino\n: Definicion breve", "definicion termino"],
-  ["mermaid", "Diagrama", "Bloque Mermaid", "```mermaid\ngraph TD\nA --> B\n```", "diagrama mermaid flujo"],
-].map(([id, title, hint, previewText, keywords]) => ({ id, title, hint, preview: previewText, keywords }));
+  ["h1", "Titulo 1", "Encabezado principal", "# Titulo principal", "titulo heading h1 principal", "Estructura", "#"],
+  ["h2", "Titulo 2", "Seccion del documento", "## Subtitulo", "titulo heading h2 subtitulo seccion", "Estructura", "##"],
+  ["h3", "Titulo 3", "Subseccion", "### Seccion", "titulo heading h3 seccion", "Estructura", "###"],
+  ["h4", "Titulo 4", "Apartado menor", "#### Apartado", "titulo heading h4 apartado", "Estructura", "####"],
+  ["h5", "Titulo 5", "Detalle", "##### Detalle", "titulo heading h5 detalle", "Estructura", "#####"],
+  ["h6", "Titulo 6", "Nota menor", "###### Nota menor", "titulo heading h6 nota menor", "Estructura", "######"],
+  ["hr", "Separador", "Linea horizontal", "---", "separador linea horizontal divisor", "Estructura", "---"],
+  ["toc", "Indice", "Links a secciones", "## Indice\n\n- [Introduccion](#introduccion)", "indice toc contenido", "Estructura", "[]"],
+  ["bold", "Negrita", "Texto importante", "**texto importante**", "negrita bold fuerte", "Texto", "Ctrl/Cmd+B"],
+  ["italic", "Cursiva", "Enfasis suave", "*texto en cursiva*", "cursiva italic enfasis", "Texto", "Ctrl/Cmd+I"],
+  ["strike", "Tachado", "Texto eliminado", "~~texto tachado~~", "tachado strike", "Texto", "~~"],
+  ["inlineCode", "Codigo inline", "Codigo en linea", "`codigo`", "codigo inline code", "Texto", "`"],
+  ["highlight", "Marcado", "Texto resaltado", "==texto resaltado==", "marcado resaltado", "Texto", "=="],
+  ["ul", "Lista con vinetas", "Puntos simples", "- Primer punto\n- Segundo punto", "lista vinetas puntos", "Listas", "-"],
+  ["ol", "Lista numerada", "Pasos ordenados", "1. Primer paso\n2. Segundo paso", "lista numerada pasos", "Listas", "1."],
+  ["task", "Lista de tareas", "Checklist con pendientes", "- [x] Tarea completada\n- [ ] Tarea pendiente", "tareas checklist", "Listas", "[ ]"],
+  ["nested", "Sublista", "Lista anidada", "- Tema principal\n  - Detalle relacionado", "sublista anidada", "Listas", "--"],
+  ["quote", "Cita", "Bloque destacado", "> Cita o nota destacada", "cita quote", "Contenido", ">"],
+  ["callout", "Nota", "Aclaracion importante", "> **Nota:** escribe aqui una aclaracion importante.", "nota callout aviso", "Contenido", "!"],
+  ["link", "Enlace", "Texto con URL", "[Texto del enlace](https://ejemplo.com)", "link enlace url", "Contenido", "Ctrl/Cmd+K"],
+  ["image", "Imagen", "Markdown de imagen", "![Descripcion](https://...)", "imagen foto media", "Contenido", "img"],
+  ["table", "Tabla", "Filas y columnas", "| Elemento | Estado |\n| --- | --- |\n| Editor | Listo |", "tabla columnas filas", "Contenido", "| |"],
+  ["codeBlock", "Bloque de codigo", "Codigo con lenguaje", "```js\nconsole.log(\"Hola\")\n```", "codigo bloque", "Contenido", "{}"],
+  ["details", "Desplegable", "Contenido colapsable", "<details>\n<summary>Ver mas</summary>\n\nContenido oculto\n\n</details>", "desplegable detalles", "Contenido", "..."],
+  ["footnote", "Nota al pie", "Referencia con explicacion", "Texto con nota[^1]\n\n[^1]: Explicacion", "nota pie footnote", "Contenido", "[^]"],
+  ["definition", "Definicion", "Termino y descripcion", "Termino\n: Definicion breve", "definicion termino", "Contenido", ":"],
+  ["mermaid", "Diagrama", "Bloque Mermaid", "```mermaid\ngraph TD\nA --> B\n```", "diagrama mermaid flujo", "Contenido", "mer"],
+].map(([id, title, hint, previewText, keywords, category, shortcut]) => ({
+  id,
+  title,
+  hint,
+  preview: previewText,
+  keywords,
+  category,
+  shortcut,
+}));
 
 const getSlashMatch = () => {
   const cursor = editor.state.selection.main.head;
@@ -919,6 +1611,10 @@ const renderSlashPreview = () => {
     return;
   }
 
+  const meta = document.createElement("div");
+  meta.className = "slash-preview-meta";
+  meta.innerHTML = `<span>${activeCommand.category}</span><kbd>${activeCommand.shortcut}</kbd>`;
+
   const rendered = document.createElement("div");
   rendered.className = "slash-preview-rendered";
   setSafeHtml(rendered, marked.parse(preprocessMarkdown(activeCommand.preview)));
@@ -930,7 +1626,7 @@ const renderSlashPreview = () => {
   const snippet = document.createElement("pre");
   snippet.className = "slash-preview-code";
   snippet.textContent = activeCommand.preview;
-  slashPreview.append(rendered, snippetLabel, snippet);
+  slashPreview.append(meta, rendered, snippetLabel, snippet);
 };
 
 const updateSlashSelection = (index) => {
@@ -948,11 +1644,19 @@ const renderSlashMenu = () => {
     const button = document.createElement("button");
     button.type = "button";
     button.className = index === slashState.selected ? "slash-item is-selected" : "slash-item";
+    const header = document.createElement("span");
+    header.className = "slash-item-header";
     const title = document.createElement("span");
     title.textContent = command.title;
+    const category = document.createElement("em");
+    category.textContent = command.category;
+    header.append(title, category);
     const hint = document.createElement("small");
     hint.textContent = command.hint;
-    button.append(title, hint);
+    const shortcut = document.createElement("kbd");
+    shortcut.textContent = command.shortcut;
+    shortcut.className = "slash-item-shortcut";
+    button.append(header, hint, shortcut);
     button.addEventListener("mouseenter", () => updateSlashSelection(index));
     button.addEventListener("pointerdown", (event) => {
       event.preventDefault();
@@ -961,6 +1665,11 @@ const renderSlashMenu = () => {
     });
     slashList.appendChild(button);
   });
+
+  const footer = document.createElement("div");
+  footer.className = "slash-footer";
+  footer.innerHTML = "<span>Enter para insertar</span><span>↑ ↓ para navegar</span><span>Esc para cerrar</span>";
+  slashList.appendChild(footer);
 
   renderSlashPreview();
 };
@@ -1253,7 +1962,10 @@ const setFocusMode = (enabled) => {
   focusModeButton.textContent = enabled ? "Salir foco" : "Foco";
   storageSet(focusKey, String(enabled));
   closeSlashMenu();
-  if (enabled) setGuideVisible(false);
+  if (enabled) {
+    setGuideVisible(false);
+    setHistoryVisible(null);
+  }
   refreshEditorLayout();
 };
 
@@ -1302,9 +2014,8 @@ clearButton.addEventListener("click", () => {
 });
 
 newDocumentButton.addEventListener("click", () => {
-  const documents = getDocuments();
   const doc = createBlankDocument(getActiveFolderId());
-  setDocuments([doc, ...documents]);
+  setDocuments([...getDocuments(), doc]);
   activeDocumentId = doc.id;
   storageSet(activeDocumentKey, doc.id);
   setActiveFolderId(getDocumentFolderId(doc));
@@ -1320,6 +2031,8 @@ newFolderButton.addEventListener("click", () => {
     id: crypto.randomUUID(),
     name,
     createdAt: Date.now(),
+    order: getVisibleFolders().length,
+    deletedAt: null,
   };
   setFolders([...getFolders(), folder]);
   setActiveFolderId(folder.id);
@@ -1362,6 +2075,10 @@ closeGuideButton.addEventListener("click", () => {
   setGuideVisible(false);
 });
 
+closeHistoryButton.addEventListener("click", () => {
+  setHistoryVisible(null);
+});
+
 openSearchButton.addEventListener("click", () => {
   openSearchInterface();
 });
@@ -1370,10 +2087,15 @@ document.addEventListener("click", (event) => {
   if (!slashMenu.contains(event.target) && !editorHost.contains(event.target)) closeSlashMenu();
   if (!actionsMenu.contains(event.target)) actionsMenu.open = false;
   if (!helpOverlay.hidden && event.target === helpOverlay) setGuideVisible(false);
+  if (!historyOverlay.hidden && event.target === historyOverlay) setHistoryVisible(null);
 });
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
+    if (!historyOverlay.hidden) {
+      setHistoryVisible(null);
+      return;
+    }
     if (!helpOverlay.hidden) {
       setGuideVisible(false);
       return;

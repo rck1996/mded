@@ -209,6 +209,23 @@ Escribe aqui tu contenido. Usa los botones de la izquierda si no recuerdas la si
           </aside>
         </div>
         <button class="focus-exit" id="focus-exit" type="button">Salir de foco</button>
+        <div class="history-overlay" id="history-overlay" hidden>
+          <section class="history-dialog" role="dialog" aria-modal="true" aria-labelledby="history-title">
+            <div class="history-header">
+              <div>
+                <p class="help-eyebrow">Historial</p>
+                <h2 id="history-title">Versiones del documento</h2>
+              </div>
+              <button class="panel-toggle" id="close-history" type="button">Cerrar</button>
+            </div>
+            <div class="history-body">
+              <div class="history-list" id="history-list"></div>
+              <div class="history-preview" id="history-preview">
+                <p class="empty-state">Selecciona una version para ver su contenido.</p>
+              </div>
+            </div>
+          </section>
+        </div>
         <div class="help-overlay" id="help-overlay" hidden>
           <section class="help-dialog" role="dialog" aria-modal="true" aria-labelledby="help-title">
             <div class="help-header">
