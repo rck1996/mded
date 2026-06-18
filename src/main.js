@@ -1106,10 +1106,12 @@ viewButtons.forEach((button) => {
 });
 
 const setSidePanel = (panel) => {
-  workspace.dataset.sidePanel = panel;
-  storageSet(sidePanelStorageKey, panel);
+  const availablePanels = [...sidePanelButtons].map((button) => button.dataset.sidePanel);
+  const nextPanel = availablePanels.includes(panel) ? panel : "documents";
+  workspace.dataset.sidePanel = nextPanel;
+  storageSet(sidePanelStorageKey, nextPanel);
   sidePanelButtons.forEach((button) => {
-    const selected = button.dataset.sidePanel === panel;
+    const selected = button.dataset.sidePanel === nextPanel;
     button.classList.toggle("is-selected", selected);
     button.setAttribute("aria-selected", String(selected));
     button.tabIndex = selected ? 0 : -1;
