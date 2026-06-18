@@ -2145,27 +2145,6 @@ body {
   display: inline-flex;
 }
 
-.rail-icon {
-  display: grid;
-  width: 22px;
-  height: 22px;
-  place-items: center;
-  border-radius: 999px;
-  color: var(--surface);
-  background: var(--text);
-  font-size: 16px;
-  line-height: 1;
-}
-
-.rail-label {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  color: var(--text);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-}
-
 .workspace[data-theme="dark"] {
   --bg: #101214;
   --surface: #1b1f24;
@@ -2301,15 +2280,6 @@ body {
   background: #2b3138;
 }
 
-.workspace[data-theme="dark"] .rail-icon {
-  color: #101214;
-  background: var(--accent-hover);
-}
-
-.workspace[data-theme="dark"] .rail-label {
-  color: var(--text);
-}
-
 .workspace[data-theme="dark"] #markdown-preview,
 .workspace[data-theme="dark"] #markdown-preview * {
   border-color: var(--border);
@@ -2357,10 +2327,6 @@ body {
     padding: 8px 12px;
   }
 
-  .rail-label {
-    writing-mode: horizontal-tb;
-    transform: none;
-  }
 }
 
 @media (max-width: 900px) {
@@ -2485,15 +2451,6 @@ body {
 .workspace:not([data-theme="dark"]) .insert-rail {
   color: var(--text);
   background: #ffffff;
-}
-
-.workspace:not([data-theme="dark"]) .rail-icon {
-  color: #ffffff;
-  background: var(--accent);
-}
-
-.workspace:not([data-theme="dark"]) .rail-label {
-  color: var(--text);
 }
 
 .workspace:not([data-theme="dark"]) #markdown-preview p,
@@ -2729,16 +2686,6 @@ body {
 .workspace[data-side-visible="false"][data-view="preview"] .insert-rail,
 .workspace[data-focus="true"] .insert-rail {
   display: none !important;
-}
-
-.rail-icon {
-  color: var(--surface);
-  background: var(--accent);
-}
-
-.workspace[data-theme="dark"] .rail-icon {
-  color: #101214;
-  background: var(--accent-hover);
 }
 
 #markdown-preview {
@@ -3580,23 +3527,6 @@ body {
   text-orientation: mixed;
 }
 
-.rail-icon {
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  font-size: 10px;
-  font-weight: 850;
-}
-
-.rail-label {
-  color: var(--text);
-  font-size: 11px;
-  font-weight: 760;
-  letter-spacing: 0;
-}
-
 .workspace[data-side-visible="false"] .insert-rail {
   border: 1px solid var(--border);
   background: var(--surface);
@@ -3740,11 +3670,6 @@ body {
   max-width: 42px;
 }
 
-.rail-label {
-  display: block;
-  max-height: 86px;
-}
-
 @media (max-width: 1180px) {
   .panel-header span + span,
   .editor-header span + span,
@@ -3763,10 +3688,6 @@ body {
     max-width: 100%;
   }
 
-  .rail-label {
-    max-height: none;
-    max-width: 100%;
-  }
 }
 
 @media (max-width: 520px) {
