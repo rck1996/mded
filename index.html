@@ -3,17 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MDed</title>
+    <title>MarkEDdown</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/logo/favicon.svg" />
   </head>
   <body>
     <main class="app">
       <section class="workspace">
+        <div class="personal-notice" id="personal-notice" role="note">
+          <div class="personal-notice-copy">
+            <strong>Herramienta personal</strong>
+            <span>Los documentos se guardan localmente en este navegador. No hay sync ni respaldo remoto.</span>
+          </div>
+          <button class="panel-toggle" id="dismiss-notice" type="button">Ocultar</button>
+        </div>
         <header class="topbar">
           <div class="brand">
-            <div class="brand-mark" aria-hidden="true">Md</div>
+            <img class="brand-mark" src="/assets/logo/markeddown-icon.svg" alt="MarkEDdown" />
             <div class="brand-copy">
               <p class="eyebrow">Editor Markdown</p>
-              <h1>MDed</h1>
+              <h1>Mark<span>ED</span>down</h1>
             </div>
           </div>
           <div class="view-switcher" aria-label="Modo de vista">
@@ -31,12 +39,17 @@
               <button class="secondary-button" id="focus-mode" type="button">Foco</button>
               <button class="secondary-button" id="theme-toggle" type="button">Oscuro</button>
               <details class="actions-menu">
-                <summary class="secondary-button">Acciones</summary>
+                <summary class="secondary-button" aria-label="Mas acciones">Mas</summary>
                 <div class="actions-menu-content">
+                  <span>Espacio</span>
+                  <button class="quick-action" id="open-preferences" type="button">Preferencias</button>
+                  <button class="quick-action" id="theme-toggle-menu" type="button">Tema</button>
+                  <button class="quick-action" id="focus-mode-menu" type="button">Modo foco</button>
                   <span>Aprender</span>
                   <button id="open-guide" type="button">Atajos y ayuda</button>
                   <span>Editar</span>
                   <button id="open-search" type="button">Buscar y reemplazar</button>
+                  <button id="open-templates" type="button">Plantillas</button>
                   <span>Copiar</span>
                   <button id="copy-markdown" type="button">Markdown</button>
                   <button id="copy-html" type="button">HTML</button>
@@ -45,6 +58,7 @@
                   <button id="download-markdown" type="button">Descargar .md</button>
                   <button id="export-html" type="button">HTML</button>
                   <button id="export-assets" type="button">Assets ZIP</button>
+                  <button id="toggle-presentation" type="button">Presentacion</button>
                   <span>Documento</span>
                   <button class="danger-action" id="clear-document" type="button">Limpiar contenido</button>
                 </div>
@@ -85,6 +99,11 @@
             </div>
             <div class="document-tools">
               <input id="document-search" type="search" placeholder="Buscar" aria-label="Buscar documentos">
+              <div class="document-filters" aria-label="Filtros del explorador">
+                <button class="is-selected" type="button" data-explorer-filter="all" aria-pressed="true">Todo</button>
+                <button type="button" data-explorer-filter="favorites" aria-pressed="false">Favoritos</button>
+                <button type="button" data-explorer-filter="recent" aria-pressed="false">Recientes</button>
+              </div>
             </div>
             <div class="document-list" id="document-list"></div>
           </aside>
@@ -92,61 +111,66 @@
           <aside class="toolbox" id="insert-panel" role="tabpanel" aria-labelledby="side-tab-insert">
             <div class="toolbox-title">
               <span>Insertar</span>
+              <span>Bloques listos con sintaxis y ejemplo</span>
             </div>
             <section class="tool-group">
               <h2>Estructura</h2>
               <div class="tool-grid">
-                <button type="button" data-format="h1"><span>Titulo 1</span><kbd>#</kbd></button>
-                <button type="button" data-format="h2"><span>Titulo 2</span><kbd>##</kbd></button>
-                <button type="button" data-format="h3"><span>Titulo 3</span><kbd>###</kbd></button>
-                <button type="button" data-format="h4"><span>Titulo 4</span><kbd>####</kbd></button>
-                <button type="button" data-format="h5"><span>Titulo 5</span><kbd>#####</kbd></button>
-                <button type="button" data-format="h6"><span>Titulo 6</span><kbd>######</kbd></button>
-                <button type="button" data-format="hr"><span>Separador</span><kbd>---</kbd></button>
-                <button type="button" data-format="toc"><span>Indice</span><kbd>[]</kbd></button>
+                <button type="button" data-format="h1"><span class="tool-copy"><strong>Titulo 1</strong><small>Abre una seccion principal del documento.</small></span><span class="tool-meta"><kbd>#</kbd><span class="tool-preview tool-preview-heading tool-preview-h1">Titulo principal</span></span></button>
+                <button type="button" data-format="h2"><span class="tool-copy"><strong>Titulo 2</strong><small>Organiza temas dentro del contenido.</small></span><span class="tool-meta"><kbd>##</kbd><span class="tool-preview tool-preview-heading tool-preview-h2">Seccion</span></span></button>
+                <button type="button" data-format="h3"><span class="tool-copy"><strong>Titulo 3</strong><small>Divide subsecciones y bloques internos.</small></span><span class="tool-meta"><kbd>###</kbd><span class="tool-preview tool-preview-heading tool-preview-h3">Detalle</span></span></button>
+                <button type="button" data-format="h4"><span class="tool-copy"><strong>Titulo 4</strong><small>Sirve para niveles mas finos dentro del esquema.</small></span><span class="tool-meta"><kbd>####</kbd><span class="tool-preview tool-preview-heading">Paso</span></span></button>
+                <button type="button" data-format="h5"><span class="tool-copy"><strong>Titulo 5</strong><small>Util para notas tecnicas muy detalladas.</small></span><span class="tool-meta"><kbd>#####</kbd><span class="tool-preview tool-preview-heading">Nota</span></span></button>
+                <button type="button" data-format="h6"><span class="tool-copy"><strong>Titulo 6</strong><small>Ultimo nivel de jerarquia disponible.</small></span><span class="tool-meta"><kbd>######</kbd><span class="tool-preview tool-preview-heading">Microtitulo</span></span></button>
+                <button type="button" data-format="hr"><span class="tool-copy"><strong>Separador</strong><small>Marca un corte visual entre bloques.</small></span><span class="tool-meta"><kbd>---</kbd><span class="tool-preview tool-preview-rule" aria-hidden="true"></span></span></button>
+                <button type="button" data-format="toc"><span class="tool-copy"><strong>Indice</strong><small>Inserta una referencia para la tabla de contenidos.</small></span><span class="tool-meta"><kbd>[]</kbd><span class="tool-preview tool-preview-list"><span>1. Introduccion</span><span>2. Desarrollo</span></span></span></button>
               </div>
             </section>
 
             <section class="tool-group">
               <h2>Texto</h2>
               <div class="tool-grid">
-                <button type="button" data-format="bold"><span>Negrita</span><kbd>**</kbd></button>
-                <button type="button" data-format="italic"><span>Cursiva</span><kbd>*</kbd></button>
-                <button type="button" data-format="strike"><span>Tachado</span><kbd>~~</kbd></button>
-                <button type="button" data-format="inlineCode"><span>Codigo</span><kbd>`</kbd></button>
-                <button type="button" data-format="highlight"><span>Marcado</span><kbd>==</kbd></button>
-                <button type="button" data-format="quote"><span>Cita</span><kbd>&gt;</kbd></button>
-                <button type="button" data-format="callout"><span>Nota</span><kbd>!</kbd></button>
+                <button type="button" data-format="bold"><span class="tool-copy"><strong>Negrita</strong><small>Destaca una idea o una palabra clave.</small></span><span class="tool-meta"><kbd>**</kbd><span class="tool-preview"><strong>Importante</strong></span></span></button>
+                <button type="button" data-format="italic"><span class="tool-copy"><strong>Cursiva</strong><small>Da enfasis suave o tono editorial.</small></span><span class="tool-meta"><kbd>*</kbd><span class="tool-preview"><em>Matiz</em></span></span></button>
+                <button type="button" data-format="strike"><span class="tool-copy"><strong>Tachado</strong><small>Muestra texto descartado o ya resuelto.</small></span><span class="tool-meta"><kbd>~~</kbd><span class="tool-preview"><s>Anterior</s></span></span></button>
+                <button type="button" data-format="inlineCode"><span class="tool-copy"><strong>Codigo</strong><small>Encierra comandos, nombres o variables.</small></span><span class="tool-meta"><kbd>`</kbd><span class="tool-preview tool-preview-code">npm run dev</span></span></button>
+                <button type="button" data-format="highlight"><span class="tool-copy"><strong>Marcado</strong><small>Subraya una parte que no debe perderse.</small></span><span class="tool-meta"><kbd>==</kbd><span class="tool-preview tool-preview-highlight">Revision</span></span></button>
+                <button type="button" data-format="quote"><span class="tool-copy"><strong>Cita</strong><small>Resalta una frase o referencia textual.</small></span><span class="tool-meta"><kbd>&gt;</kbd><span class="tool-preview tool-preview-quote">Idea clave</span></span></button>
+                <button type="button" data-format="callout"><span class="tool-copy"><strong>Nota</strong><small>Crea un bloque de aviso o contexto.</small></span><span class="tool-meta"><kbd>!</kbd><span class="tool-preview tool-preview-callout">Nota breve</span></span></button>
               </div>
             </section>
 
             <section class="tool-group">
               <h2>Listas</h2>
               <div class="tool-grid">
-                <button type="button" data-format="ul"><span>Vinetas</span><kbd>-</kbd></button>
-                <button type="button" data-format="ol"><span>Numerada</span><kbd>1.</kbd></button>
-                <button type="button" data-format="task"><span>Tareas</span><kbd>[ ]</kbd></button>
-                <button type="button" data-format="nested"><span>Sublista</span><kbd>--</kbd></button>
+                <button type="button" data-format="ul"><span class="tool-copy"><strong>Vinetas</strong><small>Lista elementos sin un orden fijo.</small></span><span class="tool-meta"><kbd>-</kbd><span class="tool-preview tool-preview-list"><span>• Item</span><span>• Otro</span></span></span></button>
+                <button type="button" data-format="ol"><span class="tool-copy"><strong>Numerada</strong><small>Ordena pasos o secuencias.</small></span><span class="tool-meta"><kbd>1.</kbd><span class="tool-preview tool-preview-list"><span>1. Paso uno</span><span>2. Paso dos</span></span></span></button>
+                <button type="button" data-format="task"><span class="tool-copy"><strong>Tareas</strong><small>Perfecta para checklists y seguimiento.</small></span><span class="tool-meta"><kbd>[ ]</kbd><span class="tool-preview tool-preview-list"><span>☐ Pendiente</span><span>☑ Hecho</span></span></span></button>
+                <button type="button" data-format="nested"><span class="tool-copy"><strong>Sublista</strong><small>Agrega un nivel interno a otra lista.</small></span><span class="tool-meta"><kbd>--</kbd><span class="tool-preview tool-preview-list"><span>• Item</span><span>&nbsp;&nbsp;◦ Subitem</span></span></span></button>
               </div>
             </section>
 
             <section class="tool-group">
               <h2>Contenido</h2>
               <div class="tool-grid">
-                <button type="button" data-format="link"><span>Enlace</span><kbd>url</kbd></button>
-                <button type="button" data-format="image"><span>Imagen</span><kbd>img</kbd></button>
-                <button type="button" data-format="table"><span>Tabla</span><kbd>| |</kbd></button>
-                <button type="button" data-format="codeBlock"><span>Bloque codigo</span><kbd>{}</kbd></button>
-                <button type="button" data-format="details"><span>Desplegable</span><kbd>...</kbd></button>
-                <button type="button" data-format="footnote"><span>Nota pie</span><kbd>[^]</kbd></button>
-                <button type="button" data-format="definition"><span>Definicion</span><kbd>:</kbd></button>
-                <button type="button" data-format="mermaid"><span>Diagrama</span><kbd>mer</kbd></button>
+                <button type="button" data-format="link"><span class="tool-copy"><strong>Enlace</strong><small>Conecta texto con una URL o recurso.</small></span><span class="tool-meta"><kbd>url</kbd><span class="tool-preview tool-preview-link">Texto enlazado</span></span></button>
+                <button type="button" data-format="image"><span class="tool-copy"><strong>Imagen</strong><small>Inserta una imagen con alt y ruta.</small></span><span class="tool-meta"><kbd>img</kbd><span class="tool-preview tool-preview-image" aria-hidden="true"></span></span></button>
+                <button type="button" data-format="table"><span class="tool-copy"><strong>Tabla</strong><small>Ordena datos en filas y columnas.</small></span><span class="tool-meta"><kbd>| |</kbd><span class="tool-preview tool-preview-table"><span>Campo</span><span>Valor</span></span></span></button>
+                <button type="button" data-format="codeBlock"><span class="tool-copy"><strong>Bloque codigo</strong><small>Agrega un snippet completo con lenguaje.</small></span><span class="tool-meta"><kbd>{}</kbd><span class="tool-preview tool-preview-code">const total = 2;</span></span></button>
+                <button type="button" data-format="details"><span class="tool-copy"><strong>Desplegable</strong><small>Oculta contenido secundario bajo un resumen.</small></span><span class="tool-meta"><kbd>...</kbd><span class="tool-preview tool-preview-details">Resumen expandible</span></span></button>
+                <button type="button" data-format="footnote"><span class="tool-copy"><strong>Nota pie</strong><small>Aclara una idea con referencia al final.</small></span><span class="tool-meta"><kbd>[^]</kbd><span class="tool-preview">Texto<sup>1</sup></span></span></button>
+                <button type="button" data-format="definition"><span class="tool-copy"><strong>Definicion</strong><small>Explica terminos con formato glosario.</small></span><span class="tool-meta"><kbd>:</kbd><span class="tool-preview tool-preview-definition"><strong>API</strong><em>Interfaz del sistema</em></span></span></button>
+                <button type="button" data-format="mermaid"><span class="tool-copy"><strong>Diagrama</strong><small>Genera un bloque Mermaid para flujos o mapas.</small></span><span class="tool-meta"><kbd>mer</kbd><span class="tool-preview tool-preview-flow"><span></span><span></span><span></span></span></span></button>
               </div>
             </section>
           </aside>
           <aside class="outline-panel" id="outline-panel" role="tabpanel" aria-labelledby="side-tab-outline">
             <div class="panel-header compact-header">
               <span>Indice</span>
+              <div class="outline-actions">
+                <button class="panel-toggle" id="fold-all-sections" type="button">Plegar</button>
+                <button class="panel-toggle" id="unfold-all-sections" type="button">Abrir</button>
+              </div>
             </div>
             <div class="outline-list" id="outline-list"></div>
           </aside>
@@ -203,12 +227,17 @@ Escribe aqui tu contenido. Usa los botones de la izquierda si no recuerdas la si
               <div class="asset-list" id="asset-list"></div>
             </section>
             <section class="inspector-section">
+              <h2>Notas internas</h2>
+              <div class="notes-list" id="notes-list"></div>
+            </section>
+            <section class="inspector-section">
               <h2>Validacion</h2>
               <div class="validation-list" id="validation-list"></div>
             </section>
           </aside>
         </div>
         <button class="focus-exit" id="focus-exit" type="button">Salir de foco</button>
+        <button class="presentation-exit" id="presentation-exit" type="button">Salir de presentacion</button>
         <div class="history-overlay" id="history-overlay" hidden>
           <section class="history-dialog" role="dialog" aria-modal="true" aria-labelledby="history-title">
             <div class="history-header">
@@ -245,8 +274,10 @@ Escribe aqui tu contenido. Usa los botones de la izquierda si no recuerdas la si
                   <li><kbd>Ctrl/Cmd + B</kbd><span>Negrita sobre la seleccion</span></li>
                   <li><kbd>Ctrl/Cmd + I</kbd><span>Cursiva sobre la seleccion</span></li>
                   <li><kbd>Ctrl/Cmd + K</kbd><span>Crea un enlace</span></li>
+                  <li><kbd>Ctrl/Cmd + Alt + N</kbd><span>Agrega o edita una nota interna del bloque actual</span></li>
                   <li><kbd>Ctrl/Cmd + Shift + F</kbd><span>Activa modo foco</span></li>
                   <li><kbd>Ctrl/Cmd + .</kbd><span>Abre o cierra el inspector</span></li>
+                  <li><kbd>Ctrl/Cmd + ,</kbd><span>Abre preferencias</span></li>
                   <li><kbd>F1</kbd><span>Abre esta guia</span></li>
                   <li><kbd>Esc</kbd><span>Cierra menus, guia o foco</span></li>
                 </ul>
@@ -272,8 +303,90 @@ Escribe aqui tu contenido. Usa los botones de la izquierda si no recuerdas la si
             </div>
           </section>
         </div>
+        <div class="template-overlay" id="template-overlay" hidden>
+          <section class="template-dialog" role="dialog" aria-modal="true" aria-labelledby="template-title">
+            <div class="template-header">
+              <div>
+                <p class="help-eyebrow">Plantillas</p>
+                <h2 id="template-title">Crear desde plantilla</h2>
+              </div>
+              <button class="panel-toggle" id="close-templates" type="button">Cerrar</button>
+            </div>
+            <div class="template-grid" id="template-grid"></div>
+          </section>
+        </div>
+        <div class="asset-preview-overlay" id="asset-preview-overlay" hidden>
+          <section class="asset-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="asset-preview-title">
+            <div class="asset-preview-header">
+              <div>
+                <p class="help-eyebrow">Asset</p>
+                <h2 id="asset-preview-title">Vista previa</h2>
+              </div>
+              <button class="panel-toggle" id="close-asset-preview" type="button">Cerrar</button>
+            </div>
+            <div class="asset-preview-body" id="asset-preview-body"></div>
+          </section>
+        </div>
+        <div class="preferences-overlay" id="preferences-overlay" hidden>
+          <section class="preferences-dialog" role="dialog" aria-modal="true" aria-labelledby="preferences-title">
+            <div class="preferences-header">
+              <div>
+                <p class="help-eyebrow">Preferencias</p>
+                <h2 id="preferences-title">Lectura y editor</h2>
+              </div>
+              <button class="panel-toggle" id="close-preferences" type="button">Cerrar</button>
+            </div>
+            <div class="preferences-grid">
+              <section class="preferences-section">
+                <h3>Lectura</h3>
+                <label class="preferences-field">
+                  <span>Ancho del documento</span>
+                  <select id="preference-width">
+                    <option value="narrow">Estrecho</option>
+                    <option value="regular">Regular</option>
+                    <option value="wide">Amplio</option>
+                  </select>
+                </label>
+                <label class="preferences-field">
+                  <span>Densidad</span>
+                  <select id="preference-density">
+                    <option value="comfortable">Comoda</option>
+                    <option value="compact">Compacta</option>
+                  </select>
+                </label>
+                <label class="preferences-field">
+                  <span>Tipografia del documento</span>
+                  <select id="preference-typography">
+                    <option value="system">Sistema</option>
+                    <option value="serif">Serif</option>
+                    <option value="mono">Monoespaciada</option>
+                  </select>
+                </label>
+              </section>
+              <section class="preferences-section">
+                <h3>Editor</h3>
+                <label class="preferences-field">
+                  <span>Line wrap</span>
+                  <select id="preference-wrap">
+                    <option value="on">Activado</option>
+                    <option value="off">Desactivado</option>
+                  </select>
+                </label>
+                <label class="preferences-field">
+                  <span>Tema</span>
+                  <select id="preference-theme">
+                    <option value="light">Claro</option>
+                    <option value="dark">Oscuro</option>
+                  </select>
+                </label>
+              </section>
+            </div>
+          </section>
+        </div>
       </section>
     </main>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
+
+

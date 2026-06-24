@@ -1,6 +1,6 @@
-# MDed
+# MarkEDdown
 
-MDed is a local-first Markdown editor designed for focused writing, structured documents, and polished previews. It combines a CodeMirror editing surface, a live Markdown renderer, reusable document tools, and a lightweight inspector without sending document content to a backend.
+MarkEDdown is a local-first Markdown editor designed for focused writing, structured documents, and polished previews. It combines a CodeMirror editing surface, a live Markdown renderer, reusable document tools, and a lightweight inspector without sending document content to a backend.
 
 ## Highlights
 
@@ -19,7 +19,7 @@ MDed is a local-first Markdown editor designed for focused writing, structured d
 
 ## Security And Privacy
 
-MDed is local-first. Documents, preferences, pasted images, and stored link references are saved in browser `localStorage`.
+MarkEDdown is local-first. Documents, preferences, pasted images, and stored link references are saved in browser `localStorage`.
 
 Security measures included:
 
@@ -70,10 +70,50 @@ npm run preview
 
 ```text
 src/
-  main.js      App logic, editor setup, rendering, storage, commands
-  styles.css   Layout, themes, panels, editor and preview styling
+  main.js              Thin entrypoint for styles and app bootstrap
+  app/
+    app-runtime.js     App runtime, editor wiring, rendering, and UI events
+    bindings.js        Global UI event wiring
+    document-workflow.js Document and folder use-cases
+    editor-commands.js Editor formatting, note, and section commands
+    preview-renderer.js Preview, outline, notes, assets, stats, and validation
+    storage.js         localStorage keys and persistence helpers
+    dom.js             Centralized DOM bindings
+    config.js          Shared runtime constants
+    file-actions.js    Copy, download, and asset export actions
+    templates.js       Starter document templates
+  styles/
+    index.css          Styles entrypoint and imports
+    legacy.css         Current visual cascade preserved in order
+    mobile.css         Reserved responsive extraction layer
+    tokens.css         Token extraction entrypoint
 index.html     Application shell
+docs/
+  ARCHITECTURE.md  Current architecture, boundaries, and target evolution
+  PROJECT-STRUCTURE.md  Root and src/ folder guide
 ```
+
+## Architecture
+
+MarkEDdown currently uses a local-first single-page architecture with:
+
+- semantic application shell in `index.html`;
+- a thin entrypoint in `src/main.js`;
+- runtime orchestration in `src/app/app-runtime.js`;
+- global UI bindings in `src/app/bindings.js`;
+- document and folder workflow in `src/app/document-workflow.js`;
+- editor commands in `src/app/editor-commands.js`;
+- file actions in `src/app/file-actions.js`;
+- preview rendering in `src/app/preview-renderer.js`;
+- persistence helpers in `src/app/storage.js`;
+- centralized selectors and config in `src/app/dom.js` and `src/app/config.js`;
+- stylesheet composition in `src/styles/index.css` with the live cascade preserved in `src/styles/legacy.css`;
+- browser `localStorage` as the persistence layer.
+
+The current implementation is intentionally framework-light. For this project, the preferred architecture is **modular vanilla JavaScript** with explicit boundaries around documents, folders, history, assets, markdown rendering, editor integration, and UI panels.
+
+Detailed architectural documentation is available in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+Project structure documentation is available in [docs/PROJECT-STRUCTURE.md](docs/PROJECT-STRUCTURE.md).
 
 ## Current Design Principles
 
@@ -102,6 +142,23 @@ index.html     Application shell
 - Drag headings inside `Indice` to reorder document sections.
 - Restore deleted items from `Papelera` at the bottom of the explorer.
 
+## Fase 2 And 3 Status
+
+Current status:
+
+- `Fase 2`: largely implemented in product behavior and now more cohesive in the UI.
+- `Fase 3`: completed in this iteration.
+
+Recent additions:
+
+- Template picker overlay for creating new documents from templates.
+- Explorer support for favorites, recents, archive, move, duplicate, inline rename, and drag-and-drop reordering.
+- Asset preview overlay with direct insert and replace actions.
+- Presentation mode focused on reading and clean review.
+- Preferences for reading width, density, typography, theme, and editor line wrap.
+- HTML export with a standalone styled document instead of a bare HTML shell.
+- Internal notes per heading block, visible only inside MarkEDdown and excluded from exported/published output.
+
 ## Roadmap
 
 ### Fase 1
@@ -117,7 +174,7 @@ Estado: completada
 
 ### Fase 2
 
-Estado: pendiente
+Estado: en progreso avanzado
 
 - Plegado de secciones por encabezados.
 - Reordenar bloques desde indice o comandos.
@@ -128,7 +185,7 @@ Estado: pendiente
 
 ### Fase 3
 
-Estado: pendiente
+Estado: completada
 
 - Exportacion HTML mas cuidada.
 - Modo presentacion/publicacion para vista limpia.
@@ -138,3 +195,55 @@ Estado: pendiente
 ## License
 
 Private project.
+
+## Deploy To Cloudflare Pages
+
+This project is ready for Cloudflare Pages as a static Vite site.
+
+### Git integration
+
+In Cloudflare Pages, connect the repository and use:
+
+- Build command: `npm run build`
+- Build output directory: dist
+- Production branch: main (or your default branch)
+
+Recommended setup:
+
+- Connect the `markeddown` Pages project directly to the GitHub repository.
+- Let Cloudflare Pages deploy production automatically on every push to `main`.
+- Keep preview deployments enabled for branches and pull requests.
+
+### Direct Upload with Wrangler
+
+Build locally:
+
+```bash
+npm install
+npm run build
+```
+
+Deploy the generated dist/ folder:
+
+```bash
+npx wrangler pages deploy dist
+```
+
+A preview deployment can be sent with:
+
+```bash
+npm run cf:deploy:preview
+```
+
+The local Wrangler config is in wrangler.toml and declares pages_build_output_dir = "dist".
+
+### GitHub Actions CI/CD
+
+The repository now includes `.github/workflows/cloudflare-pages.yml`.
+
+Behavior:
+
+- Every pull request runs `npm ci` and `npm run build`.
+- Every push to `main` runs the same validation.
+
+GitHub Actions is intentionally CI-only here. Production deploys should come from Cloudflare Pages Git integration, not from GitHub Actions via Wrangler.

@@ -1,0 +1,4 @@
+/*
+  Stylesheet entrypoint kept for project structure and documentation.
+  The live imports happen in src/main.js to avoid Vite dev-server issues with nested CSS @import chaining.
+*/

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">MarkEDdown app icon</title>
+  <desc id="desc">Minimal app icon with a markdown document, bold hash symbol, folded corner, and text lines.</desc>
+  <defs>
+    <linearGradient id="icon-bg" x1="32" y1="24" x2="224" y2="232" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#11203d" />
+      <stop offset="1" stop-color="#09111f" />
+    </linearGradient>
+    <linearGradient id="hash-fill" x1="92" y1="86" x2="160" y2="162" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#75d7ff" />
+      <stop offset="1" stop-color="#2196ff" />
+    </linearGradient>
+  </defs>
+  <rect x="12" y="12" width="232" height="232" rx="52" fill="url(#icon-bg)" />
+  <rect x="62" y="44" width="132" height="168" rx="26" fill="#f8fbff" />
+  <path d="M156 44h12c14 0 26 12 26 26v12h-26c-7 0-12-5-12-12V44Z" fill="#dbe7f5" />
+  <path d="M94 88h13l-4 21h22l4-21h13l-4 21h15v12h-18l-3 14h16v12h-18l-4 21h-13l4-21h-22l-4 21H82l4-21H72v-12h17l3-14H77v-12h18l4-21Zm9 33-3 14h22l3-14h-22Z" fill="url(#hash-fill)" />
+  <rect x="88" y="174" width="58" height="8" rx="4" fill="#2196ff" opacity=".95" />
+  <rect x="88" y="158" width="74" height="8" rx="4" fill="#2196ff" opacity=".45" />
+</svg>
