@@ -660,30 +660,11 @@ header h1 {
   min-height: calc(100vh - 112px);
 }
 
-.workspace[data-insert-visible="false"] .layout {
-  grid-template-columns: 36px minmax(360px, 0.9fr) minmax(460px, 1.1fr);
-}
 
-.workspace[data-insert-visible="false"] .toolbox {
-  display: none;
-}
 
-.workspace[data-insert-visible="false"] .insert-rail {
-  display: block;
-}
 
-.workspace[data-insert-visible="false"][data-view="editor"] .layout,
-.workspace[data-insert-visible="false"][data-view="preview"] .layout {
-  grid-template-columns: 36px minmax(0, 1fr);
-}
 
-.workspace[data-insert-visible="false"][data-view="preview"] .layout {
-  grid-template-columns: minmax(0, 1fr);
-}
 
-.workspace[data-insert-visible="false"][data-view="preview"] .insert-rail {
-  display: none;
-}
 
 .panel-header {
   display: flex;
@@ -1203,9 +1184,6 @@ textarea:focus {
     grid-template-columns: 260px minmax(0, 1fr);
   }
 
-  .workspace[data-insert-visible="false"] .layout {
-    grid-template-columns: 36px minmax(0, 1fr);
-  }
 }
 
 @media (max-width: 780px) {
@@ -1265,16 +1243,7 @@ textarea:focus {
     display: flex;
   }
 
-  .workspace[data-insert-visible="false"][data-view="editor"] .toolbox {
-    display: none;
-  }
 
-  .workspace[data-insert-visible="false"] .insert-rail {
-    display: block;
-    width: 100%;
-    writing-mode: horizontal-tb;
-    padding: 9px 12px;
-  }
 
   .editor-panel,
   .preview-panel {
@@ -1321,24 +1290,9 @@ textarea:focus {
   display: none;
 }
 
-.workspace[data-insert-visible="false"] .layout {
-  grid-template-columns: 286px 36px minmax(320px, 0.9fr) minmax(360px, 1fr) 240px;
-  grid-template-areas: "documents rail editor preview inspector";
-}
 
-.workspace[data-insert-visible="false"] .insert-rail {
-  grid-area: rail;
-}
 
-.workspace[data-insert-visible="false"][data-view="editor"] .layout {
-  grid-template-columns: 286px 36px minmax(0, 1fr) 240px;
-  grid-template-areas: "documents rail editor inspector";
-}
 
-.workspace[data-insert-visible="false"][data-view="preview"] .layout {
-  grid-template-columns: minmax(0, 1fr) 240px;
-  grid-template-areas: "preview inspector";
-}
 
 .workspace[data-focus="true"] .topbar,
 .workspace[data-focus="true"] .documents-panel,
@@ -1387,32 +1341,9 @@ textarea:focus {
       "inspector inspector";
   }
 
-  .workspace[data-insert-visible="false"] .layout {
-    grid-template-columns: 260px 36px minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-areas:
-      "documents rail editor preview"
-      "inspector inspector inspector inspector";
-  }
 }
 
-@media (max-width: 900px) {
-  .layout,
-  .workspace[data-view="editor"] .layout,
-  .workspace[data-view="preview"] .layout,
-  .workspace[data-insert-visible="false"] .layout {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "documents"
-      "toolbox"
-      "editor"
-      "preview"
-      "inspector";
-  }
 
-  .workspace[data-insert-visible="false"] .insert-rail {
-    grid-area: toolbox;
-  }
-}
 
 /* Premium design pass */
 :root {
@@ -1516,13 +1447,7 @@ body {
   grid-template-columns: 272px minmax(0, 1fr) 232px;
 }
 
-.workspace[data-insert-visible="false"] .layout {
-  grid-template-columns: 272px 34px minmax(380px, 0.95fr) minmax(430px, 1.05fr) 232px;
-}
 
-.workspace[data-insert-visible="false"][data-view="editor"] .layout {
-  grid-template-columns: 272px 34px minmax(0, 1fr) 232px;
-}
 
 .toolbox,
 .documents-panel,
@@ -1858,9 +1783,6 @@ body {
     grid-template-columns: 260px minmax(0, 1fr) minmax(0, 1fr);
   }
 
-  .workspace[data-insert-visible="false"] .layout {
-    grid-template-columns: 260px 34px minmax(0, 1fr) minmax(0, 1fr);
-  }
 }
 
 @media (max-width: 900px) {
@@ -1871,10 +1793,6 @@ body {
   .layout,
   .workspace[data-view="editor"] .layout,
   .workspace[data-view="preview"] .layout,
-  .workspace[data-insert-visible="false"] .layout,
-  .workspace[data-insert-visible="false"][data-view="editor"] .layout {
-    grid-template-columns: 1fr;
-  }
 
   #markdown-preview {
     margin: 12px auto;
@@ -4640,9 +4558,6 @@ body {
     linear-gradient(180deg, #fbfbfd 0%, #f2f3f5 100%);
 }
 
-.workspace[data-chrome="compact"] {
-  --topbar-safe-height: 64px;
-}
 
 body {
   font-family:
@@ -5581,220 +5496,6 @@ body {
 
   .workspace[data-presentation="true"] #markdown-preview {
     padding: 42px 22px 56px;
-  }
-}
-
-/* Codex mobile responsive pass */
-@media (max-width: 900px) {
-  .topbar {
-    position: static;
-    top: auto;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 12px;
-    padding: 14px;
-  }
-
-  .brand,
-  .document-actions,
-  .view-switcher,
-  .status-cluster,
-  .button-cluster {
-    width: 100%;
-    min-width: 0;
-  }
-
-  .document-actions {
-    justify-self: stretch;
-    justify-items: stretch;
-  }
-
-  .view-switcher {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .view-switcher button,
-  .status-cluster > *,
-  .button-cluster > *,
-  .actions-menu,
-  .actions-menu summary {
-    min-width: 0;
-  }
-
-  .status-cluster,
-  .button-cluster {
-    justify-content: stretch;
-  }
-
-  .layout,
-  .workspace[data-view="split"] .layout {
-    grid-template-columns: minmax(0, 1fr) !important;
-    grid-template-areas:
-      "side-tabs"
-      "side-panel"
-      "editor"
-      "preview" !important;
-    min-height: auto;
-  }
-
-  .workspace[data-view="editor"] .layout {
-    grid-template-columns: minmax(0, 1fr) !important;
-    grid-template-areas:
-      "side-tabs"
-      "side-panel"
-      "editor" !important;
-  }
-
-  .workspace[data-view="preview"] .layout {
-    grid-template-columns: minmax(0, 1fr) !important;
-    grid-template-areas: "preview" !important;
-  }
-
-  .workspace[data-side-visible="false"] .layout,
-  .workspace[data-side-visible="false"][data-view="split"] .layout {
-    grid-template-columns: minmax(0, 1fr) !important;
-    grid-template-areas:
-      "rail"
-      "editor"
-      "preview" !important;
-  }
-
-  .workspace[data-side-visible="false"][data-view="editor"] .layout {
-    grid-template-columns: minmax(0, 1fr) !important;
-    grid-template-areas:
-      "rail"
-      "editor" !important;
-  }
-
-  .workspace[data-side-visible="false"][data-view="preview"] .layout {
-    grid-template-columns: minmax(0, 1fr) !important;
-    grid-template-areas: "preview" !important;
-  }
-
-  .side-tabs,
-  .workspace[data-side-visible="false"] .insert-rail,
-  .insert-rail {
-    position: static;
-    top: auto;
-    width: 100% !important;
-    max-width: none !important;
-    min-height: 44px;
-    height: auto;
-  }
-
-  .side-tabs {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: stretch;
-    padding: 8px;
-  }
-
-  .side-tablist {
-    width: 100%;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  }
-
-  .side-tabs button,
-  .side-hide,
-  .insert-rail,
-  .workspace[data-side-visible="false"] .insert-rail {
-    width: 100% !important;
-    max-width: none !important;
-    min-width: 0;
-    min-height: 40px;
-    height: 40px;
-    padding: 0 12px;
-  }
-
-  .side-tabs .nav-label,
-  .side-hide .nav-label,
-  .insert-rail .rail-label {
-    position: static;
-    width: auto;
-    height: auto;
-    overflow: visible;
-    clip: auto;
-    white-space: nowrap;
-  }
-
-  .side-tabs button,
-  .side-hide,
-  .insert-rail {
-    gap: 8px;
-  }
-
-  .side-tabs button::after,
-  .side-hide::after,
-  .insert-rail::after {
-    display: none !important;
-  }
-
-  #editor-host,
-  #markdown-preview {
-    margin: 8px;
-    border-radius: 16px;
-  }
-
-  #markdown-preview {
-    padding: 24px 18px 30px;
-  }
-
-  #markdown-preview h1 {
-    font-size: 32px;
-    line-height: 1.08;
-  }
-
-  #markdown-preview table {
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
-@media (max-width: 640px) {
-  .workspace {
-    padding: 10px;
-    gap: 10px;
-  }
-
-  .brand-copy h1 {
-    font-size: 26px;
-  }
-
-  .brand-copy p {
-    margin-top: 2px;
-  }
-
-  .status-cluster,
-  .button-cluster {
-    flex-wrap: wrap;
-  }
-
-  #document-stats,
-  .save-status,
-  .inspector-toggle,
-  .button-cluster > *,
-  .actions-menu,
-  .actions-menu summary {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .panel-header,
-  .toolbox-title {
-    gap: 8px;
-  }
-
-  #editor-host,
-  #markdown-preview {
-    margin: 6px;
-  }
-
-  #markdown-preview {
-    padding: 20px 16px 26px;
-  }
-
-  #markdown-preview h1 {
-    font-size: 28px;
   }
 }
 

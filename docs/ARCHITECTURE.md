@@ -2,599 +2,141 @@
 
 ## Objetivo
 
-MarkEDdown es una aplicacion web local-first para escribir, organizar y exportar documentos Markdown sin depender de backend. El producto prioriza:
+MarkEDdown es una SPA local-first para escribir, organizar y exportar Markdown sin backend.
+El objetivo de la arquitectura es mantener tres cosas bajo control:
 
-- edicion rapida;
-- preview confiable;
-- estructura documental;
-- persistencia local;
-- despliegue simple como sitio estatico.
+- flujo de edicion rapido;
+- preview seguro y consistente;
+- modularizacion incremental sin reescribir la app.
 
-Este documento explica la arquitectura actual del proyecto, sus limites, las decisiones tecnicas que la sostienen y la direccion recomendada para seguir modularizando el codigo sin reescribir la app.
+## Resumen
 
-## Resumen Ejecutivo
+La aplicacion corre completamente en el navegador.
+Vite solo resuelve el build y el entorno de desarrollo.
+La persistencia se apoya en `localStorage`.
+No existe API remota ni servidor de aplicacion.
 
-La arquitectura actual es una SPA construida con Vite y JavaScript vanilla. No hay servidor de aplicacion ni API remota. Toda la logica vive en el cliente y la persistencia principal usa `localStorage`.
+La estructura actual se divide en capas claras:
 
-En terminos practicos:
+- `index.html`: shell semantico del workspace.
+- `src/main.js`: entrypoint minimo.
+- `src/app/`: runtime, wiring y coordinacion.
+- `src/domain/`: reglas de negocio y transformaciones del documento.
+- `src/editor/`: integracion con CodeMirror.
+- `src/ui/`: render de paneles y piezas visuales complejas.
+- `src/styles/`: sistema CSS por capas.
 
-- `index.html` define la estructura base del workspace.
-- `src/main.js` es el punto de entrada minimo.
-- `src/app/app-runtime.js` ejecuta la aplicacion y concentra la mayor parte de la orquestacion.
-- `src/app/bindings.js` registra eventos globales, overlays y atajos.
-- `src/app/document-workflow.js` agrupa casos de uso de documentos y carpetas.
-- `src/app/editor-commands.js` concentra comandos del editor y notas de secciones.
-- `src/app/file-actions.js` encapsula copiado, descargas y exportacion de assets.
-- `src/app/preview-renderer.js` compone preview, outline, notas, assets y validacion.
-- `src/app/storage.js` encapsula claves y helpers de persistencia.
-- `src/app/dom.js` centraliza referencias al DOM.
-- `src/app/config.js` agrupa configuraciones compartidas.
-- `src/app/templates.js` concentra plantillas iniciales de documentos.
-- `src/styles/index.css` compone los estilos con capas ordenadas; `src/styles/legacy.css` mantiene la base visual, `src/styles/workspace-layout.css` concentra la matriz de layout, `src/styles/panel-states.css` concentra estados de paneles, `src/styles/controls.css` concentra estados de controles, `src/styles/overlays.css` concentra dialogs y overlays, `src/styles/reading-modes.css` concentra modo presentacion y preferencias de lectura, y `src/styles/mobile.css` queda como capa responsive final.
+## Capas del sistema
 
-La arquitectura es valida para el alcance actual, pero todavia existe una concentracion importante de comportamiento en `app-runtime.js`. El trabajo arquitectonico correcto no es una migracion de framework, sino separar responsabilidades de forma incremental.
+### Shell
 
-## Principios De Diseño
+`index.html` define regiones estables para:
 
-### 1. Local-first
-
-El producto debe funcionar sin infraestructura de servidor. Eso reduce complejidad operativa, acelera el tiempo de carga y facilita despliegue en Cloudflare Pages.
-
-### 2. Una sola fuente de verdad por responsabilidad
-
-Los datos persistentes deben derivarse de helpers de almacenamiento y no del DOM. El DOM representa estado renderizado, no estado de negocio.
-
-### 3. Pipeline explicito para Markdown
-
-El flujo `preprocess -> render -> sanitize -> mount` no debe romperse. Es una frontera critica tanto de seguridad como de consistencia visual.
-
-### 4. Modularizacion incremental
-
-La app puede seguir evolucionando sin reescritura si cada nueva mejora saca una responsabilidad clara fuera de `app-runtime.js`.
-
-### 5. Framework-light por decision
-
-El problema actual no es falta de framework. El problema es separacion de responsabilidades. Por eso la direccion recomendada sigue siendo modular vanilla JS.
-
-## Estructura Actual
-
-```text
-index.html
-src/
-  main.js
-  app/
-    app-runtime.js
-    bindings.js
-    document-workflow.js
-    editor-commands.js
-    file-actions.js
-    preview-renderer.js
-    storage.js
-    dom.js
-    config.js
-    templates.js
-  styles/
-    index.css
-    legacy.css
-    mobile.css
-    tokens.css
-public/
-  assets/
-    logo/
-docs/
-  ARCHITECTURE.md
-  ROADMAP.md
-```
-
-## Responsabilidad Por Archivo
-
-### `index.html`
-
-Define el shell semantico de la app:
-
-- barra superior;
-- panel lateral;
-- area del editor;
+- topbar;
+- navegacion lateral;
+- paneles de documentos, insert y outline;
+- editor;
 - preview;
-- inspector;
-- overlays;
-- menus de acciones.
+- overlays.
 
-No debe contener logica de negocio. Su funcion es estructural.
+La logica no deberia vivir aqui.
 
-### `src/main.js`
+### App runtime
 
-Actua como entrypoint minimo:
+`src/app/app-runtime.js` sigue siendo el orquestador principal.
+Coordina:
 
-- carga estilos globales;
-- arranca `app-runtime.js`.
-
-Su valor arquitectonico es desacoplar el arranque del resto de la implementacion.
-
-### `src/app/app-runtime.js`
-
-Es el runtime principal. Hoy concentra:
-
-- inicializacion del editor;
-- sincronizacion de documento activo;
-- render del preview;
-- acciones del explorador;
-- templates;
+- documento activo;
+- preferencias;
+- sincronizacion editor/preview;
+- assets;
 - historial;
 - overlays;
-- assets;
-- preferencias;
-- foco, presentacion e inspector;
-- wiring de eventos del DOM;
-- integracion con CodeMirror, `marked` y `JSZip`.
+- estados visuales del workspace.
 
-Este archivo sigue siendo el mayor cuello de mantenimiento.
+El runtime ya no concentra toda la UI como antes, pero sigue siendo el mayor punto de composicion.
 
-### `src/app/bindings.js`
+### Domain
 
-Centraliza el wiring de eventos de la UI:
+`src/domain/` encapsula logica reusable y menos dependiente del DOM:
 
-- clicks de toolbar y overlays;
-- atajos globales de teclado;
-- toggles de paneles, foco y presentacion;
-- sincronizacion de preferencias desde inputs.
+- `documents.js`: documentos, snapshots e historial.
+- `folders.js`: carpetas, orden, filtro y colapso.
+- `markdown.js`: expansion de tokens, sanitizacion y export HTML.
+- `assets.js`: assets embebidos y referencias.
+- `outline.js`: headings, fold range y movimiento de secciones.
 
-Mover este bloque fuera del runtime reduce ruido operativo y hace mas visible la logica de negocio restante.
+Esta capa es la frontera correcta para seguir reduciendo complejidad del runtime.
 
-### `src/app/file-actions.js`
+### Editor
 
-Encapsula acciones de salida del editor:
+`src/editor/codemirror.js` concentra la configuracion de CodeMirror:
 
-- copiar Markdown y HTML;
-- descargar `.md` y `.html`;
-- exportar assets como `.zip`.
+- extensiones;
+- keymaps;
+- folding;
+- widgets;
+- integracion con slash menu y estado del documento.
 
-Esta frontera evita mezclar operaciones de navegador y descarga con el ciclo principal del documento.
+La idea es que el resto de la app trate al editor como una dependencia bien definida, no como una serie de detalles repartidos.
 
-### `src/app/document-workflow.js`
+### UI
 
-Agrupa el comportamiento de documentos y carpetas:
+`src/ui/` contiene renderizadores de paneles y componentes dinamicos:
 
-- documento activo;
-- crear desde plantilla;
-- borrar, restaurar y archivar;
-- mover y reordenar.
+- `explorer-panel.js`
+- `outline-panel.js`
+- `assets-panel.js`
+- `history-panel.js`
+- `notes-panel.js`
+- `slash-menu.js`
 
-Esto reduce la mezcla entre estado editorial y wiring visual.
+Esto evita seguir mezclando markup imperativo grande dentro del runtime.
 
-### `src/app/editor-commands.js`
+### Persistencia
 
-Concentra acciones de edición:
+`src/app/storage.js` concentra claves y helpers de `localStorage`.
+La regla es simple: el resto del sistema no deberia acceder a `localStorage` directamente cuando ya existe un helper.
 
-- inserciones en cursor;
-- atajos de formato;
-- movimiento de secciones;
-- notas internas por heading.
+## CSS
 
-La ventaja principal es que el runtime deja de cargar detalles operativos del editor.
+El sistema de estilos ahora entra por `src/styles/index.css` y usa capas ordenadas.
 
-### `src/app/preview-renderer.js`
+Orden actual:
 
-Agrupa la salida visual del documento:
+- `tokens.css`: punto de entrada para variables y tokens compartidos.
+- `legacy.css`: base visual actual de la app.
+- `workspace-layout.css`: matriz de layout principal.
+- `panel-states.css`: visibilidad y comportamiento de paneles laterales.
+- `controls.css`: estados de controles y variantes dark.
+- `overlays.css`: overlays y dialogs.
+- `reading-modes.css`: presentation mode y preferencias de lectura.
+- `mobile.css`: overrides responsive finales.
 
-- render del preview HTML;
-- outline;
-- panel de notas;
-- panel y preview de assets;
-- stats y validación.
+Esto resuelve un problema real del proyecto: antes el responsive, el layout y los estados de panel competian dentro de un unico archivo gigante.
 
-Esta separación convierte el preview en un subsistema explícito en lugar de una serie de efectos laterales dentro del runtime.
+## Flujo principal
 
-### `src/app/storage.js`
+1. `main.js` carga estilos y arranca el runtime.
+2. El runtime lee documentos, carpetas y preferencias desde `storage.js` y `domain/`.
+3. `editor/codemirror.js` monta el editor.
+4. `preview-renderer.js` transforma Markdown a HTML seguro y actualiza preview, outline, notas, assets y validacion.
+5. `bindings.js` conecta shortcuts, overlays y acciones globales.
+6. `ui/` renderiza paneles especializados.
 
-Centraliza persistencia y utilidades alrededor de `localStorage`:
+## Estado actual
 
-- claves de almacenamiento;
-- preferencias por defecto;
-- lectura y escritura segura;
-- mapas persistidos;
-- tokens de links e imagenes;
-- notas por bloque;
-- ordenamiento de assets.
+La arquitectura ya no esta en el punto inicial de `bootstrap.js` monolitico.
+Hoy existe separacion real entre runtime, dominio, editor, UI y estilos.
 
-Este modulo ya establece una frontera importante: el resto de la app no deberia acceder a `localStorage` directamente.
+Lo que aun queda por seguir reduciendo:
 
-### `src/app/dom.js`
+- extraer mas casos de uso desde `app-runtime.js`;
+- seguir adelgazando `legacy.css` moviendo componentes finales a archivos dedicados;
+- mantener la regla de una sola fuente por responsabilidad.
 
-Centraliza consultas al DOM y evita que los selectores queden repartidos por todo el runtime. Esto reduce acoplamiento accidental y simplifica futuros cambios de markup.
+## Direccion recomendada
 
-### `src/app/config.js`
-
-Agrupa constantes operativas:
-
-- breakpoint mobile;
-- carpeta por defecto;
-- limite de snapshots;
-- intervalo de snapshots automaticos.
-
-### `src/app/templates.js`
-
-Contiene plantillas de inicio para nuevos documentos. Esta separacion evita mezclar contenido editorial con logica de ejecucion.
-
-### `src/styles/index.css`
-
-Concentra:
-
-- tokens visuales;
-- layout;
-- temas;
-- responsive;
-- estilos de paneles, overlays y editor host.
-
-## Capas Del Sistema
-
-La app puede entenderse en cinco capas.
-
-### 1. Shell
-
-La capa shell es la estructura HTML base y sus regiones principales. Su responsabilidad es exponer zonas estables para que la aplicacion pinte UI encima.
-
-### 2. Estado
-
-La capa de estado contiene datos persistentes y transitorios.
-
-Persistentes:
-
-- documentos;
-- carpetas;
-- documento activo;
-- carpeta activa;
-- filtros del explorador;
-- estado de paneles;
-- tema y preferencias;
-- links e imagenes almacenadas;
-- notas por bloque;
-- historial por documento.
-
-Transitorios:
-
-- slash menu abierto;
-- seleccion activa dentro de overlays;
-- timers de feedback/autoguardado;
-- documento actualmente montado en editor;
-- flags visuales del workspace.
-
-### 3. Dominio
-
-Aunque aun no vive en modulos separados, el dominio ya existe conceptualmente:
-
-- documentos;
-- carpetas;
-- snapshots e historial;
-- assets y links;
-- markdown y sanitizacion;
-- outline;
-- preferencias y modos de visualizacion.
-
-### 4. Integracion
-
-Esta capa adapta librerias externas:
-
-- CodeMirror 6 para edicion, keymaps, search y folding;
-- `marked` para pasar de Markdown a HTML;
-- `JSZip` para export de assets;
-- APIs nativas del navegador como `localStorage`, `FileReader`, `Blob`, `crypto.randomUUID` y Clipboard.
-
-### 5. Presentacion
-
-La capa de presentacion genera UI derivada del estado:
-
-- filas del explorador;
-- outline;
-- preview renderizado;
-- inspector;
-- overlays;
-- menus contextuales;
-- estados vacios y feedback.
-
-La estrategia es imperativa y basada en DOM. Es aceptable mientras la app siga siendo local, acotada y de un solo usuario.
-
-## Modelo De Datos
-
-### Documento
-
-Campos relevantes observados en runtime:
-
-- `id`
-- `title`
-- `titleManual`
-- `markdown`
-- `folderId`
-- `createdAt`
-- `updatedAt`
-- `order`
-- `deletedAt`
-- `archivedAt`
-- `favorite`
-- `history`
-- `lastSnapshotAt`
-
-Responsabilidad:
-
-- representar una unidad editable;
-- mantener historial local;
-- participar en filtros, orden y acciones del explorador.
-
-### Folder
-
-Campos relevantes:
-
-- `id`
-- `name`
-- `createdAt`
-- `order`
-- `deletedAt`
-
-Responsabilidad:
-
-- agrupar documentos;
-- soportar ordenamiento y papelera;
-- proveer contexto al explorador.
-
-### Snapshot
-
-Cada snapshot conserva:
-
-- `id`
-- `title`
-- `markdown`
-- `createdAt`
-- `reason`
-
-Responsabilidad:
-
-- versionar el documento sin depender de infraestructura remota.
-
-### Asset
-
-Se almacena con:
-
-- `id`
-- `name`
-- `type`
-- `order`
-- `value`
-
-`value` normalmente es un data URL. Es simple, portable y consistente con el enfoque local-first, aunque no es eficiente para grandes volumenes.
-
-### Link Token
-
-Los links internos usan una referencia persistida para no llenar el editor con URLs largas. En el preview y export se expanden al valor real.
-
-### Block Notes
-
-Las notas internas viven fuera del Markdown visible/exportable. Eso permite separar contenido publicable de comentarios internos.
-
-## Flujo De Ejecucion
-
-### Arranque
-
-1. `src/main.js` carga estilos y bootstrap.
-2. `app-runtime.js` compone workflow, comandos, preview y callbacks del runtime.
-3. Se recupera estado desde `localStorage`.
-4. Se determina el documento activo.
-5. Se crea CodeMirror con extensiones y listeners.
-6. Se hidrata el workspace visual.
-7. Se renderiza preview, explorador, inspector y estados derivados.
-
-### Edicion
-
-1. El usuario escribe en CodeMirror.
-2. Un listener detecta cambios.
-3. Se sincroniza el Markdown con el documento activo.
-4. Se programa o actualiza snapshot si corresponde.
-5. Se re-renderiza preview.
-6. Se recalculan outline, stats, validaciones y assets relacionados.
-
-### Creacion De Documento
-
-1. El usuario crea un documento en blanco o desde template.
-2. Se genera la entidad con metadata inicial.
-3. Se adjunta snapshot inicial.
-4. Se persiste en `documentsKey`.
-5. Se abre en editor y se actualiza la UI.
-
-### Exportacion
-
-1. Se toma el estado actual del documento.
-2. Se expande Markdown interno si hay tokens.
-3. Se produce HTML seguro.
-4. Se arma un documento standalone estilizado o un archivo `.md`.
-5. Si aplica, los assets se empaquetan con `JSZip`.
-
-## Pipeline De Markdown
-
-Esta es una de las zonas mas criticas del producto.
-
-### Paso 1. Expansion de tokens
-
-Referencias como `mded-image:*` y `mded-link:*` se reemplazan por sus valores persistidos.
-
-### Paso 2. Preprocesamiento
-
-Se aplican transformaciones internas del producto, por ejemplo `==highlight==`.
-
-### Paso 3. Render HTML
-
-`marked` genera HTML a partir del Markdown.
-
-### Paso 4. Sanitizacion
-
-Se filtran tags, atributos y protocolos inseguros antes de inyectar en DOM.
-
-### Paso 5. Montaje
-
-El HTML seguro se inserta en preview o export.
-
-Regla arquitectonica: ninguna nueva funcionalidad debe bypassar este pipeline.
-
-## Persistencia
-
-La estrategia actual usa `localStorage` como base de datos ligera del navegador.
-
-### Ventajas
-
-- cero infraestructura;
-- deploy trivial;
-- modo offline natural;
-- latencia nula para lectura/escritura local.
-
-### Limitaciones
-
-- limite de capacidad del navegador;
-- no hay sync entre dispositivos;
-- no hay control de concurrencia;
-- data URLs de imagenes aumentan rapidamente el peso persistido;
-- no existe versionado externo ni backup automatico.
-
-### Decision actual
-
-Para el alcance presente, sigue siendo la opcion correcta. La fase siguiente no deberia reemplazarla, sino endurecerla con import/export de workspace y validaciones defensivas.
-
-## Seguridad
-
-La app no expone una superficie de backend, pero si procesa contenido generado por usuario. Por eso la seguridad relevante esta en render y export.
-
-Controles actuales:
-
-- HTML sanitizado antes de renderizar;
-- allowlist explicita de tags y atributos;
-- bloqueo de protocolos inseguros;
-- nodos de texto para contenido controlado por usuario donde corresponde;
-- escape de titulos en export HTML.
-
-Riesgo principal futuro:
-
-- introducir importadores, embeds o plugins que salten el pipeline seguro.
-
-## Responsive Y UI State
-
-La app ya incorpora comportamiento responsive mediante:
-
-- `mobileViewMedia` en configuracion;
-- estados de vista en `workspace.dataset`;
-- panel lateral mostrable/ocultable;
-- modos editor, split y preview;
-- overlays para acciones secundarias.
-
-La siguiente fase de UX deberia reducir complejidad mobile en navegacion y jerarquia visual, pero sobre una base estructural ya mas clara.
-
-## Problemas Arquitectonicos Actuales
-
-### 1. `app-runtime.js` sigue siendo demasiado grande
-
-Aunque ya se separaron storage, config, DOM y templates, el runtime principal mezcla demasiadas responsabilidades.
-
-### 2. Dominio y presentacion siguen acoplados
-
-Muchos cambios de datos viven cerca de rendering y listeners del DOM. Esto aumenta el costo de cambio.
-
-### 3. Falta una capa de dominio explicita
-
-Documentos, folders, markdown, assets y outline ya existen como conceptos, pero aun no como modulos aislados.
-
-### 4. CSS aun esta consolidado en un solo archivo
-
-No es urgente, pero eventualmente convendra dividir tokens, layout, components y themes.
-
-## Direccion Recomendada
-
-La arquitectura objetivo no es React, Vue ni una reescritura SPA distinta. La direccion correcta es esta:
-
-```text
-src/
-  app/
-    app-runtime.js
-    state.js
-    events.js
-    storage.js
-    dom.js
-    config.js
-  domain/
-    documents.js
-    folders.js
-    history.js
-    markdown.js
-    assets.js
-    outline.js
-  editor/
-    codemirror.js
-    commands.js
-    search.js
-    folding.js
-    tokens.js
-  ui/
-    explorer.js
-    preview.js
-    inspector.js
-    overlays.js
-    preferences.js
-  styles/
-    tokens.css
-    layout.css
-    components.css
-    themes.css
-```
-
-## Plan De Modularizacion
-
-### Fase 4. Modularizacion base
-
-Ya iniciado:
-
-- entrypoint separado;
-- storage separado;
-- DOM separado;
-- config separada;
-- templates separados.
-
-Siguiente paso real:
-
-- extraer dominio de Markdown;
-- extraer dominio de documentos e historial;
-- extraer dominio de carpetas;
-- separar wiring de eventos UI.
-
-### Fase 5. Hardening local-first y experiencia mobile
-
-- import/export de workspace;
-- restauracion defensiva ante estado corrupto;
-- mejor manejo de limites de almacenamiento;
-- simplificacion de interaccion mobile.
-
-### Fase 6. Escalabilidad interna
-
-- tests sobre dominio extraido;
-- auditoria de dead code;
-- modularizacion de estilos;
-- reduccion final del tamaño de `app-runtime.js`.
-
-## Reglas Para Cambios Futuros
-
-1. No leer ni escribir `localStorage` fuera de helpers compartidos.
-2. No usar el DOM como fuente de verdad del dominio.
-3. Toda salida HTML debe pasar por sanitizacion.
-4. Toda nueva feature debe pertenecer a un modulo o frontera concreta.
-5. Si una mejora toca datos, UI y librerias a la vez, primero separar la responsabilidad.
-6. No crecer `app-runtime.js` si el cambio crea una responsabilidad reutilizable.
-7. Mantener `npm run build` pasando despues de cada extraccion.
-
-## Criterio De Exito Arquitectonico
-
-Una mejora de arquitectura esta bien hecha si:
-
-- es mas facil encontrar responsabilidades;
-- disminuye el tamaño mental de los cambios;
-- no duplica estado;
-- no rompe el flujo local-first;
-- mantiene o mejora la experiencia del usuario;
-- deja el proyecto mas facil de extender que antes.
-
-## Conclusión
-
-MarkEDdown ya tiene una direccion de producto clara y una arquitectura funcional para su etapa actual. El problema principal no es de tecnologia base sino de concentracion de responsabilidades. La estrategia correcta es modularizar por dominio, preservar el enfoque local-first y seguir endureciendo el pipeline de contenido y persistencia mientras el producto crece.
+La mejor evolucion para este proyecto sigue siendo modular vanilla JavaScript.
+No hace falta cambiar de framework para resolver el mantenimiento.
+El trabajo correcto es seguir sacando responsabilidad del runtime y del CSS base hacia modulos pequenos, probables y faciles de ubicar.

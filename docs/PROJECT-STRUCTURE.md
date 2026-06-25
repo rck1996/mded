@@ -1,6 +1,6 @@
 # Estructura Del Proyecto
 
-## Vista rápida
+## Vista rapida
 
 ```text
 mdv-simple/
@@ -15,131 +15,124 @@ mdv-simple/
   src/
 ```
 
-## Qué va en la raíz
+## Raiz
 
 ### `index.html`
 
-Shell base de la aplicación. Define el markup principal sobre el que se monta MarkEDdown.
+Shell base de la aplicacion.
+Define las regiones del workspace y los overlays.
 
 ### `package.json`
 
-Dependencias, scripts y metadata del proyecto.
-
-### `package-lock.json`
-
-Lockfile de npm. Mantiene instalaciones reproducibles.
+Dependencias y scripts principales.
 
 ### `vite.config.js`
 
-Configuración del bundler y servidor de desarrollo.
+Configuracion del bundler y servidor local.
 
 ### `wrangler.toml`
 
-Configuración de despliegue para Cloudflare.
-
-### `README.md`
-
-Resumen del proyecto, setup y guía rápida.
-
-## Carpetas
+Configuracion de despliegue para Cloudflare Pages.
 
 ### `docs/`
 
-Documentación del proyecto.
+Documentacion del proyecto.
 
-- `ARCHITECTURE.md`: arquitectura técnica.
-- `ROADMAP.md`: plan de evolución.
-- `PROJECT-STRUCTURE.md`: esta guía.
+- `ARCHITECTURE.md`: limites tecnicos y capas.
+- `PROJECT-STRUCTURE.md`: esta guia.
+- `ROADMAP.md`: fases siguientes.
 
 ### `public/`
 
-Assets estáticos servidos tal cual.
+Assets estaticos servidos tal cual.
 
-- `assets/logo/`: logos, favicon y variantes SVG.
+- `assets/logo/`: icono, favicon y variantes SVG.
 
-### `src/`
-
-Código fuente real de la aplicación.
+## `src/`
 
 ```text
 src/
   main.js
   app/
   domain/
-  ui/
+  editor/
   styles/
+  ui/
 ```
-
-## Cómo leer `src/`
 
 ### `src/main.js`
 
-Entry point mínimo. Solo carga estilos y arranca el runtime.
+Entry point minimo.
+Solo conecta estilos y runtime.
 
 ### `src/app/`
 
-Capa de arranque y wiring.
+Orquestacion y wiring de la app.
 
-- `app-runtime.js`: inicialización, coordinación y composición de módulos.
-- `bindings.js`: wiring de eventos globales y atajos de la interfaz.
-- `document-workflow.js`: casos de uso de documentos y carpetas.
-- `editor-commands.js`: comandos de edición, formato y notas de secciones.
-- `file-actions.js`: acciones de copiar, descargar y exportar archivos.
-- `preview-renderer.js`: preview, outline, notas, assets, stats y validación.
-- `storage.js`: persistencia y claves de `localStorage`.
-- `dom.js`: referencias al DOM.
+- `app-runtime.js`: coordinacion principal.
+- `bindings.js`: eventos globales y shortcuts.
 - `config.js`: constantes compartidas.
-- `templates.js`: plantillas de documentos.
-
-### `src/styles/`
-
-- `index.css`: punto de entrada de estilos.
-- `legacy.css`: cascada visual actual preservada en el mismo orden.
-- `tokens.css`: punto de extracción futura para variables y tokens.
-- `mobile.css`: punto de extracción futura para responsive.
+- `document-workflow.js`: casos de uso de documentos y carpetas.
+- `dom.js`: referencias centralizadas al DOM.
+- `editor-commands.js`: comandos editoriales y notas.
+- `file-actions.js`: copiar, descargar y exportar.
+- `preview-renderer.js`: render de preview, outline, notas, assets y validacion.
+- `storage.js`: claves y helpers de persistencia.
+- `templates.js`: plantillas base.
 
 ### `src/domain/`
 
-Reglas de negocio puras o semi-puras.
+Reglas de negocio y transformaciones puras o semi-puras.
 
-- `documents.js`: documentos, snapshots e historial persistido.
-- `folders.js`: carpetas, orden y filtros persistidos.
-- `markdown.js`: preprocess, sanitización y export HTML.
-- `assets.js`: operaciones de assets y referencias.
-- `outline.js`: headings, folding y movimiento de secciones.
+- `documents.js`
+- `folders.js`
+- `markdown.js`
+- `assets.js`
+- `outline.js`
+
+### `src/editor/`
+
+Integracion dedicada con CodeMirror.
+
+- `codemirror.js`
 
 ### `src/ui/`
 
-Render de paneles y comportamiento visual encapsulado.
+Renderizadores de paneles y piezas complejas de interfaz.
 
 - `assets-panel.js`
-- `outline-panel.js`
-
-Esta carpeta debería seguir creciendo con:
-
+- `explorer-panel.js`
 - `history-panel.js`
 - `notes-panel.js`
-- `explorer-panel.js`
+- `outline-panel.js`
+- `slash-menu.js`
 
 ### `src/styles/`
 
-Estilos de la app. Hoy todavía vive en `index.css`, pero después debería dividirse por tokens, layout, componentes y themes.
+Sistema CSS por capas.
+
+- `index.css`: entrypoint unico.
+- `tokens.css`: tokens y variables compartidas.
+- `legacy.css`: base visual actual de la app.
+- `workspace-layout.css`: layout principal.
+- `panel-states.css`: estados de paneles.
+- `controls.css`: estados de controles.
+- `overlays.css`: overlays y dialogs.
+- `reading-modes.css`: presentation mode y preferencias de lectura.
+- `mobile.css`: responsive final.
+
+## Como leer el proyecto
+
+1. La raiz contiene configuracion y entrada.
+2. `src/app/` coordina la aplicacion.
+3. `src/domain/` define reglas reutilizables.
+4. `src/editor/` encapsula CodeMirror.
+5. `src/ui/` renderiza paneles.
+6. `src/styles/` organiza la cascada visual.
 
 ## Estado actual
 
-La raíz no está “rota”, pero sí venía poco explicada. El orden real hoy es:
+La estructura ya no esta concentrada en un unico bootstrap.
+Todavia existe un `legacy.css` grande y un `app-runtime.js` amplio, pero ambos ya estan rodeados por modulos mas claros y con responsabilidades mejor ubicadas.
 
-1. raíz para configuración y entry files;
-2. `docs/` para documentación;
-3. `public/` para assets estáticos;
-4. `src/` para código;
-5. dentro de `src/`, separación por responsabilidad: `app`, `domain`, `ui`, `styles`.
-
-## Próxima mejora visible
-
-Para que el árbol se entienda todavía mejor, las siguientes extracciones recomendadas son:
-
-1. `src/ui/history-panel.js`
-2. `src/ui/notes-panel.js`
-3. `src/ui/explorer-panel.js`
-4. `src/editor/` para toda la integración con CodeMirror
+La regla para seguir avanzando es simple: cuando aparezca una nueva pieza importante, debe entrar en la carpeta que ya representa su responsabilidad, no volver al runtime o al CSS base por defecto.

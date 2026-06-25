@@ -8,4 +8,9 @@
 */
 @import "./tokens.css" layer(tokens);
 @import "./legacy.css" layer(app);
+@import "./workspace-layout.css" layer(layout);
+@import "./panel-states.css" layer(state);
+@import "./controls.css" layer(state);
+@import "./overlays.css" layer(overlay);
+@import "./reading-modes.css" layer(mode);
 @import "./mobile.css" layer(responsive);

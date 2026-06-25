@@ -99,7 +99,6 @@ export const setSafeHtml = (element, html) => {
   element.innerHTML = sanitizeHtml(html);
 };
 
-export const renderMarkdownToHtml = (markdown, readToken) => marked.parse(preprocessMarkdown(markdown, readToken));
 
 export const getExportHtmlDocument = ({ title, html, theme, preferences }) => `<!doctype html>
 <html lang="es">
@@ -206,3 +205,4 @@ export const getExportHtmlDocument = ({ title, html, theme, preferences }) => `<
     </main>
   </body>
 </html>`;
+
