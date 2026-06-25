@@ -1,0 +1,124 @@
+/*
+  Reading width, density, typography, and presentation mode.
+*/
+.presentation-exit {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 43;
+  display: none;
+  min-height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0 14px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow-md);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.workspace[data-presentation="true"] .presentation-exit {
+  display: inline-flex;
+  align-items: center;
+}
+
+.workspace[data-presentation="true"] .topbar,
+.workspace[data-presentation="true"] .side-tabs,
+.workspace[data-presentation="true"] .documents-panel,
+.workspace[data-presentation="true"] .toolbox,
+.workspace[data-presentation="true"] .editor-panel,
+.workspace[data-presentation="true"] .inspector-panel,
+.workspace[data-presentation="true"] .insert-rail,
+.workspace[data-presentation="true"] .focus-exit,
+.workspace[data-presentation="true"] .inspector-toggle {
+  display: none !important;
+}
+
+.workspace[data-presentation="true"] .layout,
+.workspace[data-presentation="true"][data-view="split"] .layout,
+.workspace[data-presentation="true"][data-view="editor"] .layout,
+.workspace[data-presentation="true"][data-view="preview"] .layout {
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-areas: "preview" !important;
+  justify-items: center;
+  min-height: calc(100vh - 24px);
+}
+
+.workspace[data-presentation="true"] .preview-panel {
+  display: flex !important;
+  width: min(100%, 1180px);
+  min-height: calc(100vh - 24px);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.workspace[data-presentation="true"] .preview-panel .panel-header {
+  display: none;
+}
+
+.workspace[data-presentation="true"] #markdown-preview {
+  width: min(100%, var(--reading-width, 860px));
+  margin: 0 auto;
+  padding: 72px 72px 90px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.workspace[data-reading-width="narrow"] {
+  --reading-width: 720px;
+}
+
+.workspace[data-reading-width="regular"] {
+  --reading-width: 860px;
+}
+
+.workspace[data-reading-width="wide"] {
+  --reading-width: 1040px;
+}
+
+.workspace[data-density="comfortable"] #markdown-preview,
+.workspace[data-density="comfortable"] .cm-scroller {
+  line-height: 1.72;
+}
+
+.workspace[data-density="compact"] #markdown-preview,
+.workspace[data-density="compact"] .cm-scroller {
+  line-height: 1.56;
+}
+
+.workspace[data-density="compact"] #markdown-preview {
+  padding-top: 34px;
+  padding-bottom: 42px;
+}
+
+.workspace[data-typography="serif"] #markdown-preview {
+  font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+}
+
+.workspace[data-typography="mono"] #markdown-preview {
+  font-family: "SFMono-Regular", "Cascadia Code", Consolas, monospace;
+}
+
+.workspace[data-typography="system"] #markdown-preview {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.workspace[data-theme="dark"] .presentation-exit {
+  background: rgba(27, 31, 36, 0.98);
+}
+
+.workspace[data-theme="dark"][data-presentation="true"] .preview-panel,
+.workspace[data-theme="dark"][data-presentation="true"] #markdown-preview {
+  background: transparent;
+}
+
+@media (max-width: 900px) {
+  .workspace[data-presentation="true"] #markdown-preview {
+    padding: 42px 22px 56px;
+  }
+}

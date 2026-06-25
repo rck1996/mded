@@ -85,6 +85,11 @@ src/
   styles/
     index.css          Single CSS entrypoint ordered with cascade layers
     legacy.css         Base desktop/app layer preserved during cleanup
+    workspace-layout.css Layout matrix for split, editor, preview, and collapsed rail states
+    panel-states.css   View and side-panel state rules
+    controls.css       Control state and dark-theme interaction rules
+    overlays.css       Overlay and dialog surface styles
+    reading-modes.css  Presentation mode and reading preference styles
     mobile.css         Responsive override layer for tablet and mobile
     tokens.css         Token extraction entrypoint
 index.html     Application shell

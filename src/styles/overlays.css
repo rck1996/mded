@@ -202,3 +202,20 @@
   flex-wrap: wrap;
   gap: 8px;
 }
+.workspace[data-theme="dark"] .template-dialog,
+.workspace[data-theme="dark"] .preferences-dialog,
+.workspace[data-theme="dark"] .asset-preview-dialog {
+  background: rgba(27, 31, 36, 0.98);
+}
+
+.workspace[data-theme="dark"] .template-card,
+.workspace[data-theme="dark"] .preferences-section,
+.workspace[data-theme="dark"] .preferences-field select,
+.workspace[data-theme="dark"] .asset-preview-body img {
+  background: var(--surface-raised);
+}
+
+.workspace[data-theme="dark"] .template-card:hover,
+.workspace[data-theme="dark"] .template-card:focus-visible {
+  background: #232931;
+}
