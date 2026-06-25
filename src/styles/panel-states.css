@@ -54,3 +54,14 @@
 .workspace[data-view="preview"] .outline-panel {
   display: none !important;
 }
+.workspace[data-side-visible="false"] .side-tabs {
+  display: grid !important;
+}
+
+.workspace[data-side-visible="false"] .documents-panel,
+.workspace[data-side-visible="false"] .toolbox,
+.workspace[data-side-visible="false"] .outline-panel,
+.workspace[data-side-visible="false"] .insert-rail {
+  display: none !important;
+}
+

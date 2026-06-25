@@ -1,4 +1,4 @@
-@media (max-width: 1180px) {
+@media (max-width: 1180px) and (pointer: coarse) {
   .topbar {
     gap: 12px;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -17,7 +17,7 @@
   .workspace[data-view="split"] .layout {
     grid-template-columns: minmax(0, 1fr) minmax(340px, 0.92fr) !important;
     grid-template-areas:
-      "side-tabs side-tabs"
+      "side side"
       "editor preview"
       "inspector inspector" !important;
     align-items: start;
@@ -26,7 +26,7 @@
   .workspace[data-view="editor"] .layout {
     grid-template-columns: minmax(0, 1fr) !important;
     grid-template-areas:
-      "side-tabs"
+      "side"
       "editor"
       "inspector" !important;
   }
@@ -34,22 +34,29 @@
   .workspace[data-view="preview"] .layout {
     grid-template-columns: minmax(0, 1fr) !important;
     grid-template-areas:
-      "side-tabs"
+      "side"
       "preview"
       "inspector" !important;
   }
 
   .workspace[data-side-visible="false"] .layout,
   .workspace[data-side-visible="false"][data-view="split"] .layout {
-    grid-template-columns: minmax(0, 1fr) minmax(340px, 0.92fr) !important;
+    grid-template-columns: 260px minmax(0, 1fr) minmax(340px, 0.92fr) !important;
     grid-template-areas:
-      "editor preview"
-      "inspector inspector" !important;
+      "side editor preview"
+      "side editor preview" !important;
   }
 
-  .workspace[data-side-visible="false"][data-view="editor"] .layout,
+  .workspace[data-side-visible="false"][data-view="editor"] .layout {
+    grid-template-columns: 260px minmax(0, 1fr) !important;
+    grid-template-areas:
+      "side editor"
+      "side editor" !important;
+  }
+
   .workspace[data-side-visible="false"][data-view="preview"] .layout {
     grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-areas: "preview" !important;
   }
 
   .side-tabs {
@@ -104,6 +111,9 @@
 }
 
 @media (max-width: 900px) {
+  .side-panel-shell {
+    display: contents;
+  }
   .workspace {
     --mobile-shell-gap: 12px;
     --mobile-nav-height: 60px;
@@ -765,3 +775,4 @@
     font-size: 30px;
   }
 }
+

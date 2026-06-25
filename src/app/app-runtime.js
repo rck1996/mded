@@ -1254,7 +1254,7 @@ hideSidePanelButton.addEventListener("click", () => {
   setSidePanelVisible(false);
 });
 
-showInsertButton.addEventListener("click", () => {
+showInsertButton?.addEventListener("click", () => {
   setSidePanelVisible(true);
 });
 
@@ -1535,3 +1535,4 @@ window.addEventListener("resize", () => {
   updateStickyOffsets();
   updateMobileViewportMetrics();
 });
+
