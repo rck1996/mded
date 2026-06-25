@@ -3948,58 +3948,7 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
-.documents-panel,
-.toolbox,
-.outline-panel {
-  grid-area: side-panel;
-}
 
-/* Keep the active left panel aligned with the sticky tab rail on long documents. */
-.documents-panel,
-.toolbox,
-.outline-panel {
-  position: sticky;
-  top: var(--side-panel-top);
-  align-self: start;
-  max-height: calc(100vh - var(--side-panel-top) - 18px);
-  z-index: 5;
-}
-
-.documents-panel,
-.outline-panel {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.document-list,
-.outline-list {
-  min-height: 0;
-  overflow: auto;
-}
-
-.workspace[data-side-panel="documents"] .toolbox,
-.workspace[data-side-panel="documents"] .outline-panel,
-.workspace[data-side-panel="insert"] .documents-panel,
-.workspace[data-side-panel="insert"] .outline-panel,
-.workspace[data-side-panel="outline"] .documents-panel,
-.workspace[data-side-panel="outline"] .toolbox {
-  display: none !important;
-}
-
-.workspace[data-side-panel="insert"] .toolbox {
-  display: flex !important;
-}
-
-.workspace[data-side-panel="outline"] .outline-panel {
-  display: block !important;
-}
-
-.workspace[data-side-visible="false"] .outline-panel,
-.workspace[data-focus="true"] .outline-panel,
-.workspace[data-view="preview"] .outline-panel {
-  display: none !important;
-}
 
 .side-tabs {
   padding: 6px;
