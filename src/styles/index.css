@@ -1,4 +1,11 @@
+@layer tokens, app, responsive;
+
 /*
-  Stylesheet entrypoint kept for project structure and documentation.
-  The live imports happen in src/main.js to avoid Vite dev-server issues with nested CSS @import chaining.
+  Single CSS entrypoint ordered with cascade layers.
+  - tokens: shared variables and future design tokens
+  - app: current desktop/base system
+  - responsive: tablet and mobile overrides
 */
+@import "./tokens.css" layer(tokens);
+@import "./legacy.css" layer(app);
+@import "./mobile.css" layer(responsive);

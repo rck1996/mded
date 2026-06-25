@@ -65,6 +65,14 @@ export const bindWorkspaceEvents = ({
   editCurrentSectionNote,
   slashMenuController,
 }) => {
+  const openQuickActions = () => {
+    actionsMenu.open = true;
+    requestAnimationFrame(() => {
+      const firstAction = actionsMenu.querySelector(".actions-menu-content button");
+      firstAction?.focus();
+    });
+  };
+
   clearButton.addEventListener("click", () => {
     setMarkdown("# Nuevo documento\n\nEmpieza a escribir aqui.");
     actionsMenu.open = false;
@@ -254,6 +262,16 @@ export const bindWorkspaceEvents = ({
     if (isModKey(event) && event.shiftKey && event.key.toLowerCase() === "h") {
       event.preventDefault();
       openSearchInterface();
+      return;
+    }
+
+    if (isModKey(event) && !event.shiftKey && event.key.toLowerCase() === "k") {
+      event.preventDefault();
+      if (actionsMenu.open) {
+        actionsMenu.open = false;
+      } else {
+        openQuickActions();
+      }
       return;
     }
 

@@ -83,9 +83,9 @@ src/
     file-actions.js    Copy, download, and asset export actions
     templates.js       Starter document templates
   styles/
-    index.css          Styles entrypoint and imports
-    legacy.css         Current visual cascade preserved in order
-    mobile.css         Reserved responsive extraction layer
+    index.css          Single CSS entrypoint ordered with cascade layers
+    legacy.css         Base desktop/app layer preserved during cleanup
+    mobile.css         Responsive override layer for tablet and mobile
     tokens.css         Token extraction entrypoint
 index.html     Application shell
 docs/
@@ -107,7 +107,7 @@ MarkEDdown currently uses a local-first single-page architecture with:
 - preview rendering in `src/app/preview-renderer.js`;
 - persistence helpers in `src/app/storage.js`;
 - centralized selectors and config in `src/app/dom.js` and `src/app/config.js`;
-- stylesheet composition in `src/styles/index.css` with the live cascade preserved in `src/styles/legacy.css`;
+- stylesheet composition in `src/styles/index.css` using ordered cascade layers for tokens, app styles, and responsive overrides;
 - browser `localStorage` as the persistence layer.
 
 The current implementation is intentionally framework-light. For this project, the preferred architecture is **modular vanilla JavaScript** with explicit boundaries around documents, folders, history, assets, markdown rendering, editor integration, and UI panels.
