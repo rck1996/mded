@@ -1,4 +1,4 @@
-@media (max-width: 1180px) and (pointer: coarse) {
+@media (max-width: 1180px) and (hover: none) and (pointer: coarse) {
   .topbar {
     gap: 12px;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -110,7 +110,7 @@
   }
 }
 
-@media (max-width: 900px) and (pointer: coarse) {
+@media (max-width: 900px) and (hover: none) and (pointer: coarse) {
   .side-panel-shell {
     display: contents;
   }
@@ -702,7 +702,7 @@
   }
 }
 
-@media (max-width: 640px) and (pointer: coarse) {
+@media (max-width: 640px) and (hover: none) and (pointer: coarse) {
   .workspace {
     --mobile-shell-gap: 8px;
     --mobile-sheet-gap: 8px;
@@ -775,4 +775,38 @@
     font-size: 30px;
   }
 }
+@media (hover: hover), (pointer: fine) {
+  .side-panel-shell {
+    grid-area: side;
+    position: sticky;
+    top: var(--side-tabs-top);
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas:
+      "side-tabs"
+      "side-panel";
+    gap: 10px;
+    max-height: calc(100vh - var(--side-tabs-top) - 18px);
+  }
 
+  .side-panel-shell .side-tabs {
+    grid-area: side-tabs;
+    position: static;
+    inset: auto;
+    width: auto !important;
+    max-width: none !important;
+    min-height: auto;
+    z-index: auto;
+  }
+
+  .side-panel-shell .documents-panel,
+  .side-panel-shell .toolbox,
+  .side-panel-shell .outline-panel {
+    grid-area: side-panel;
+    position: relative !important;
+    inset: auto;
+    width: auto;
+    max-height: none;
+    z-index: auto;
+  }
+}
