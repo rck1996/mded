@@ -110,7 +110,7 @@
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 900px) and (pointer: coarse) {
   .side-panel-shell {
     display: contents;
   }
@@ -702,7 +702,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 640px) and (pointer: coarse) {
   .workspace {
     --mobile-shell-gap: 8px;
     --mobile-sheet-gap: 8px;

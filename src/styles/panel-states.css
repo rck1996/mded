@@ -65,3 +65,12 @@
   display: none !important;
 }
 
+
+.side-panel-shell .documents-panel,
+.side-panel-shell .toolbox,
+.side-panel-shell .outline-panel {
+  position: relative;
+  top: auto;
+  align-self: stretch;
+  max-height: none;
+}
