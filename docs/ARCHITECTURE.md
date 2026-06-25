@@ -30,7 +30,7 @@ En terminos practicos:
 - `src/app/dom.js` centraliza referencias al DOM.
 - `src/app/config.js` agrupa configuraciones compartidas.
 - `src/app/templates.js` concentra plantillas iniciales de documentos.
-- `src/styles/index.css` compone los estilos con capas ordenadas; `src/styles/legacy.css` mantiene la base visual, `src/styles/panel-states.css` concentra estados de paneles y `src/styles/mobile.css` contiene overrides responsive.
+- `src/styles/index.css` compone los estilos con capas ordenadas; `src/styles/legacy.css` mantiene la base visual, `src/styles/workspace-layout.css` concentra la matriz de layout, `src/styles/panel-states.css` concentra estados de paneles y `src/styles/mobile.css` contiene overrides responsive.
 
 La arquitectura es valida para el alcance actual, pero todavia existe una concentracion importante de comportamiento en `app-runtime.js`. El trabajo arquitectonico correcto no es una migracion de framework, sino separar responsabilidades de forma incremental.
 

@@ -5536,62 +5536,6 @@ body {
   }
 }
 
-/* Final phase 1 layout matrix: keep state transitions deterministic despite older responsive layers above. */
-.layout,
-.workspace[data-view="editor"] .layout,
-.workspace[data-view="preview"] .layout {
-  align-items: start;
-}
-
-.workspace[data-side-visible="false"] .layout {
-  grid-template-columns: 34px minmax(0, 1fr) minmax(0, 1fr) !important;
-  grid-template-areas: "rail editor preview" !important;
-}
-
-.workspace[data-side-visible="false"][data-view="editor"] .layout {
-  grid-template-columns: 34px minmax(0, 1fr) !important;
-  grid-template-areas: "rail editor" !important;
-}
-
-.workspace[data-side-visible="false"][data-view="preview"] .layout {
-  grid-template-columns: minmax(0, 1fr) !important;
-  grid-template-areas: "preview" !important;
-}
-
-@media (max-width: 1320px) {
-  .workspace[data-side-visible="false"] .layout {
-    grid-template-columns: 34px minmax(0, 1fr) minmax(0, 1fr) !important;
-    grid-template-areas:
-      "rail editor preview"
-      "rail editor preview" !important;
-  }
-
-  .workspace[data-side-visible="false"][data-view="editor"] .layout {
-    grid-template-columns: 34px minmax(0, 1fr) !important;
-    grid-template-areas:
-      "rail editor"
-      "rail editor" !important;
-  }
-
-  .workspace[data-side-visible="false"][data-view="preview"] .layout {
-    grid-template-columns: minmax(0, 1fr) !important;
-    grid-template-areas: "preview" !important;
-  }
-}
-
-@media (max-width: 980px) {
-  .workspace[data-side-visible="false"] .layout {
-    grid-template-columns: 34px minmax(0, 1fr) !important;
-    grid-template-areas:
-      "rail editor"
-      "preview preview" !important;
-  }
-
-  .workspace[data-side-visible="false"] .insert-rail {
-    align-self: stretch;
-    justify-self: center;
-  }
-}
 
 /* Final control states: keep selected and focus states readable above older inherited layers. */
 .view-switcher button:hover,
@@ -6241,19 +6185,4 @@ body {
   }
 }
 
-/* Final desktop collapse correction: when the left rail is hidden, split view must expand to the available width. */
-.workspace[data-side-visible="false"] .layout,
-.workspace[data-side-visible="false"][data-view="split"] .layout {
-  grid-template-columns: 42px minmax(0, 1fr) minmax(0, 1fr) !important;
-  grid-template-areas: "rail editor preview" !important;
-}
 
-.workspace[data-side-visible="false"][data-view="editor"] .layout {
-  grid-template-columns: 42px minmax(0, 1fr) !important;
-  grid-template-areas: "rail editor" !important;
-}
-
-.workspace[data-side-visible="false"][data-view="preview"] .layout {
-  grid-template-columns: minmax(0, 1fr) !important;
-  grid-template-areas: "preview" !important;
-}
