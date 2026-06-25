@@ -1,0 +1,204 @@
+/*
+  Overlay and dialog surfaces extracted from legacy.css.
+*/
+.help-overlay[hidden],
+.history-overlay[hidden],
+.template-overlay[hidden],
+.preferences-overlay[hidden],
+.asset-preview-overlay[hidden] {
+  display: none;
+}
+
+.template-overlay,
+.preferences-overlay,
+.asset-preview-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 62;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.template-dialog,
+.preferences-dialog,
+.asset-preview-dialog {
+  width: min(920px, calc(100vw - 32px));
+  max-height: min(88vh, 960px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.template-header,
+.preferences-header,
+.asset-preview-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.template-header h2,
+.preferences-header h2,
+.asset-preview-header h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 22px;
+  line-height: 1.12;
+  font-weight: 650;
+}
+
+.template-grid,
+.preferences-grid {
+  display: grid;
+  gap: 14px;
+  min-height: 0;
+}
+
+.template-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.template-card {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  min-height: 208px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  color: var(--text);
+  background: var(--surface-raised);
+  text-align: left;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    transform 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.template-card strong {
+  font-size: 15px;
+}
+
+.template-card span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.template-card pre {
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font: 12px/1.55 "Cascadia Code", Consolas, monospace;
+  white-space: pre-wrap;
+}
+
+.template-card:hover,
+.template-card:focus-visible {
+  border-color: var(--border-strong);
+  background: color-mix(in srgb, var(--surface-raised) 92%, white);
+  transform: translateY(-1px);
+}
+
+.preferences-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.preferences-section {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface-raised);
+}
+
+.preferences-section h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.preferences-field {
+  display: grid;
+  gap: 7px;
+}
+
+.preferences-field span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 620;
+}
+
+.preferences-field select {
+  min-height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0 12px;
+  color: var(--text);
+  background: var(--surface);
+  font: inherit;
+}
+
+.asset-item img {
+  cursor: zoom-in;
+}
+
+.asset-preview-dialog {
+  width: min(960px, calc(100vw - 32px));
+}
+
+.asset-preview-body {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.asset-preview-body img {
+  width: 100%;
+  max-height: min(70vh, 720px);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface-raised);
+  object-fit: contain;
+}
+
+.asset-preview-meta {
+  display: grid;
+  gap: 4px;
+}
+
+.asset-preview-meta strong {
+  color: var(--text);
+  font-size: 15px;
+}
+
+.asset-preview-meta span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.asset-preview-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

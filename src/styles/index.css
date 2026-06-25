@@ -1,4 +1,4 @@
-@layer tokens, app, layout, state, responsive;
+@layer tokens, app, layout, state, overlay, responsive;
 
 /*
   Single CSS entrypoint ordered with cascade layers.
