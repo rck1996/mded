@@ -1,16 +1,7 @@
-@layer tokens, app, layout, state, overlay, mode, responsive;
-
-/*
-  Single CSS entrypoint ordered with cascade layers.
-  - tokens: shared variables and future design tokens
-  - app: current desktop/base system
-  - responsive: tablet and mobile overrides
-*/
-@import "./tokens.css" layer(tokens);
-@import "./legacy.css" layer(app);
-@import "./workspace-layout.css" layer(layout);
-@import "./panel-states.css" layer(state);
-@import "./controls.css" layer(state);
-@import "./overlays.css" layer(overlay);
-@import "./reading-modes.css" layer(mode);
-@import "./mobile.css" layer(responsive);
+@import "./tokens.css";
+@import "./base.css";
+@import "./app-shell.css";
+@import "./panels.css";
+@import "./editor-preview.css";
+@import "./overlays.css";
+@import "./responsive.css";
