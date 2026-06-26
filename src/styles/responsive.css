@@ -147,6 +147,10 @@
     display: contents;
   }
 
+  .workspace[data-view="preview"] .side-panel-shell {
+    display: contents;
+  }
+
   .side-tabs {
     position: fixed;
     left: 8px;
@@ -155,7 +159,9 @@
     z-index: 90;
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto;
+    height: var(--mobile-nav-height);
     min-height: var(--mobile-nav-height);
+    max-height: var(--mobile-nav-height);
     background: var(--surface-elevated);
     box-shadow: var(--shadow-lg);
     backdrop-filter: blur(18px);

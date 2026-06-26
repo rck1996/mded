@@ -1189,6 +1189,7 @@ viewButtons.forEach((button) => {
       if (requestedView === "preview" && workspace.dataset.sidePanel === "insert") {
         setSidePanel("documents");
       }
+      closeMobileSidePanel();
     }
     syncViewButtons();
   });
