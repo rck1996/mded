@@ -17,14 +17,14 @@
           <button class="panel-toggle" id="dismiss-notice" type="button">Ocultar</button>
         </div>
         <header class="topbar">
-          <div class="brand">
+          <div class="brand" aria-label="MarkEDdown">
             <img class="brand-mark" src="/assets/logo/markeddown-icon.svg" alt="MarkEDdown" />
             <div class="brand-copy">
               <p class="eyebrow">Editor Markdown</p>
               <h1>Mark<span>ED</span>down</h1>
             </div>
           </div>
-          <div class="view-switcher" aria-label="Modo de vista">
+          <div class="view-switcher" role="group" aria-label="Modo de vista">
             <button class="is-selected" type="button" data-view="split">Dividido</button>
             <button type="button" data-view="editor">Editor</button>
             <button type="button" data-view="preview">Vista previa</button>
@@ -144,10 +144,10 @@
             <section class="tool-group">
               <h2>Listas</h2>
               <div class="tool-grid">
-                <button type="button" data-format="ul"><span class="tool-copy"><strong>Vinetas</strong><small>Lista elementos sin un orden fijo.</small></span><span class="tool-meta"><kbd>-</kbd><span class="tool-preview tool-preview-list"><span>• Item</span><span>• Otro</span></span></span></button>
+                <button type="button" data-format="ul"><span class="tool-copy"><strong>Vinetas</strong><small>Lista elementos sin un orden fijo.</small></span><span class="tool-meta"><kbd>-</kbd><span class="tool-preview tool-preview-list"><span>- Item</span><span>- Otro</span></span></span></button>
                 <button type="button" data-format="ol"><span class="tool-copy"><strong>Numerada</strong><small>Ordena pasos o secuencias.</small></span><span class="tool-meta"><kbd>1.</kbd><span class="tool-preview tool-preview-list"><span>1. Paso uno</span><span>2. Paso dos</span></span></span></button>
-                <button type="button" data-format="task"><span class="tool-copy"><strong>Tareas</strong><small>Perfecta para checklists y seguimiento.</small></span><span class="tool-meta"><kbd>[ ]</kbd><span class="tool-preview tool-preview-list"><span>☐ Pendiente</span><span>☑ Hecho</span></span></span></button>
-                <button type="button" data-format="nested"><span class="tool-copy"><strong>Sublista</strong><small>Agrega un nivel interno a otra lista.</small></span><span class="tool-meta"><kbd>--</kbd><span class="tool-preview tool-preview-list"><span>• Item</span><span>&nbsp;&nbsp;◦ Subitem</span></span></span></button>
+                <button type="button" data-format="task"><span class="tool-copy"><strong>Tareas</strong><small>Perfecta para checklists y seguimiento.</small></span><span class="tool-meta"><kbd>[ ]</kbd><span class="tool-preview tool-preview-list"><span>[ ] Pendiente</span><span>[x] Hecho</span></span></span></button>
+                <button type="button" data-format="nested"><span class="tool-copy"><strong>Sublista</strong><small>Agrega un nivel interno a otra lista.</small></span><span class="tool-meta"><kbd>--</kbd><span class="tool-preview tool-preview-list"><span>- Item</span><span>&nbsp;&nbsp;- Subitem</span></span></span></button>
               </div>
             </section>
 

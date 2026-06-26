@@ -1,0 +1,304 @@
+@media (max-width: 1240px) {
+  .topbar {
+    grid-template-columns: minmax(190px, 1fr) minmax(360px, auto);
+    grid-template-areas:
+      "brand actions"
+      "switcher actions";
+  }
+
+  .brand {
+    grid-area: brand;
+  }
+
+  .view-switcher {
+    grid-area: switcher;
+    justify-self: start;
+  }
+
+  .document-actions {
+    grid-area: actions;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: center;
+    justify-self: end;
+    width: min(100%, 520px);
+  }
+}
+
+@media (max-width: 980px) {
+  :root {
+    --side-width: 248px;
+    --panel-gap: 12px;
+  }
+}
+
+@media (max-width: 720px) {
+  :root {
+    --workspace-pad: 8px;
+    --panel-gap: 10px;
+    --mobile-nav-bottom: calc(8px + env(safe-area-inset-bottom, 0px) + var(--mobile-keyboard-offset, 0px));
+    --mobile-nav-height: 62px;
+  }
+
+  body {
+    background: var(--bg);
+  }
+
+  .workspace {
+    padding: var(--workspace-pad);
+    padding-bottom: calc(var(--mobile-nav-height) + var(--mobile-nav-bottom) + 12px);
+  }
+
+  .personal-notice {
+    align-items: stretch;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .personal-notice-copy {
+    display: grid;
+    gap: 3px;
+  }
+
+  .topbar {
+    top: 0;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "brand"
+      "switcher"
+      "status"
+      "buttons";
+    gap: 8px;
+    min-height: 0;
+    border-radius: var(--radius-lg);
+    padding: 10px;
+  }
+
+  .brand {
+    grid-area: brand;
+  }
+
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+  }
+
+  .brand-copy h1 {
+    font-size: 18px;
+  }
+
+  .view-switcher {
+    grid-area: switcher;
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .view-switcher button[data-view="split"] {
+    display: none;
+  }
+
+  .document-actions {
+    display: contents;
+  }
+
+  .status-cluster {
+    grid-area: status;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  #document-stats {
+    grid-column: 1 / -1;
+  }
+
+  .button-cluster {
+    grid-area: buttons;
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .button-cluster > .secondary-button,
+  .actions-menu {
+    flex: 1;
+  }
+
+  .actions-menu summary {
+    width: 100%;
+  }
+
+  .layout,
+  .workspace[data-view="editor"] .layout,
+  .workspace[data-view="preview"] .layout,
+  .workspace[data-side-visible="false"] .layout,
+  .workspace[data-side-visible="false"][data-view="editor"] .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "editor"
+      "preview";
+    min-height: auto;
+  }
+
+  .workspace[data-view="editor"] .preview-panel,
+  .workspace[data-view="preview"] .editor-panel {
+    display: none;
+  }
+
+  .side-panel-shell {
+    display: contents;
+  }
+
+  .side-tabs {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: var(--mobile-nav-bottom);
+    z-index: 90;
+    grid-template-columns: minmax(0, 1fr);
+    min-height: var(--mobile-nav-height);
+    background: var(--surface-elevated);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(18px);
+  }
+
+  .side-tablist {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .workspace[data-side-visible="false"] .side-tabs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .workspace[data-side-visible="false"] .side-tablist {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .workspace[data-side-visible="false"] .side-tabs button {
+    width: 100%;
+    padding: 0 10px;
+  }
+
+  .workspace[data-side-visible="false"] .nav-label {
+    display: inline;
+  }
+
+  .side-tabs .side-hide,
+  .workspace[data-side-visible="false"] .side-tabs .side-hide {
+    display: none !important;
+  }
+
+  .workspace[data-view="editor"] #side-tab-outline {
+    display: none;
+  }
+
+  .workspace[data-view="editor"] .side-tablist,
+  .workspace[data-view="preview"] .side-tablist {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .workspace[data-view="preview"] #side-tab-insert {
+    display: none;
+  }
+
+  .documents-panel,
+  .toolbox,
+  .outline-panel {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: calc(var(--mobile-nav-bottom) + var(--mobile-nav-height) + 8px);
+    z-index: 85;
+    width: auto;
+    max-height: min(68vh, calc(var(--mobile-viewport-height, 100vh) - 142px));
+    box-shadow: var(--shadow-lg);
+  }
+
+  .workspace[data-side-visible="false"] .documents-panel,
+  .workspace[data-side-visible="false"] .toolbox,
+  .workspace[data-side-visible="false"] .outline-panel {
+    display: none !important;
+  }
+
+  .editor-panel,
+  .preview-panel {
+    min-height: calc(var(--mobile-viewport-height, 100vh) - 214px);
+  }
+
+  .panel-header span:last-child,
+  .toolbox-title span:last-child {
+    display: none;
+  }
+
+  .cm-content {
+    padding: 18px !important;
+  }
+
+  #markdown-preview {
+    width: 100%;
+    padding: 30px 20px 42px;
+  }
+
+  #markdown-preview h1 {
+    font-size: 2rem;
+  }
+
+  .slash-menu {
+    grid-template-columns: minmax(0, 1fr);
+    width: calc(100% - 28px);
+  }
+
+  .slash-preview {
+    display: none;
+  }
+
+  .actions-menu-content {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    top: auto;
+    bottom: calc(var(--mobile-nav-bottom) + var(--mobile-nav-height) + 8px);
+    width: auto;
+  }
+
+  .help-overlay,
+  .history-overlay,
+  .template-overlay,
+  .preferences-overlay,
+  .asset-preview-overlay {
+    padding: 0;
+  }
+
+  .help-dialog,
+  .history-dialog,
+  .template-dialog,
+  .preferences-dialog,
+  .asset-preview-dialog {
+    width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .help-grid,
+  .preferences-grid,
+  .history-body,
+  .template-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .inspector-panel {
+    top: 8px;
+    right: 8px;
+    bottom: calc(var(--mobile-nav-bottom) + var(--mobile-nav-height) + 8px);
+    width: calc(100vw - 16px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

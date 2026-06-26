@@ -1,4 +1,72 @@
-/*
-  Structural entrypoint for future token extraction.
-  The active visual system still lives in legacy.css to preserve cascade order.
-*/
+:root {
+  color-scheme: light;
+  --bg: #eef1f3;
+  --bg-soft: #f6f7f8;
+  --surface: #ffffff;
+  --surface-soft: #f8f9fa;
+  --surface-muted: #f1f3f5;
+  --surface-elevated: rgba(255, 255, 255, 0.92);
+  --border: #d8dee5;
+  --border-strong: #b7c0ca;
+  --text: #14181d;
+  --text-strong: #0c1116;
+  --muted: #65717e;
+  --muted-strong: #47515d;
+  --accent: #145f56;
+  --accent-strong: #0f4c45;
+  --accent-soft: #e5f1ef;
+  --warning: #9a6417;
+  --warning-soft: #fff4db;
+  --danger: #b42318;
+  --danger-soft: #fff0ee;
+  --success: #166534;
+  --success-soft: #e7f5ec;
+  --code-bg: #151a20;
+  --code-text: #eef2f4;
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --shadow-sm: 0 1px 2px rgba(13, 18, 24, 0.06);
+  --shadow-md: 0 16px 42px rgba(13, 18, 24, 0.1);
+  --shadow-lg: 0 26px 80px rgba(13, 18, 24, 0.16);
+  --ring: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+  --font-ui: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-code: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --workspace-pad: 16px;
+  --topbar-height: 68px;
+  --side-width: 286px;
+  --side-rail-width: 58px;
+  --panel-gap: 14px;
+  --reading-width: 860px;
+}
+
+.workspace[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0f1317;
+  --bg-soft: #151a20;
+  --surface: #191f25;
+  --surface-soft: #20272f;
+  --surface-muted: #242c35;
+  --surface-elevated: rgba(25, 31, 37, 0.92);
+  --border: #303a45;
+  --border-strong: #56616d;
+  --text: #eef2f4;
+  --text-strong: #ffffff;
+  --muted: #9faab5;
+  --muted-strong: #c4ccd4;
+  --accent: #76d8c8;
+  --accent-strong: #a4eee1;
+  --accent-soft: #173935;
+  --warning: #f2bf67;
+  --warning-soft: #392b12;
+  --danger: #ff9b91;
+  --danger-soft: #3b1f1d;
+  --success: #88df9b;
+  --success-soft: #14331f;
+  --code-bg: #0c1014;
+  --code-text: #f4f7f8;
+}

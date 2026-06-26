@@ -1210,6 +1210,9 @@ const setSidePanel = (panel) => {
 const setSidePanelVisible = (visible) => {
   workspace.dataset.sideVisible = String(visible);
   workspace.dataset.insertVisible = String(visible);
+  hideSidePanelButton.setAttribute("aria-label", visible ? "Ocultar navegacion" : "Mostrar navegacion");
+  hideSidePanelButton.setAttribute("title", visible ? "Ocultar navegacion" : "Mostrar navegacion");
+  hideSidePanelButton.dataset.tooltip = visible ? "Ocultar navegacion" : "Mostrar navegacion";
   storageSet(insertPanelStorageKey, String(visible));
 };
 
@@ -1251,7 +1254,7 @@ sidePanelButtons.forEach((button) => {
 });
 
 hideSidePanelButton.addEventListener("click", () => {
-  setSidePanelVisible(false);
+  setSidePanelVisible(workspace.dataset.sideVisible !== "true");
 });
 
 showInsertButton?.addEventListener("click", () => {
