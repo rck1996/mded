@@ -154,6 +154,7 @@
     bottom: var(--mobile-nav-bottom);
     z-index: 90;
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
     min-height: var(--mobile-nav-height);
     background: var(--surface-elevated);
     box-shadow: var(--shadow-lg);
@@ -174,11 +175,11 @@
 
   .workspace[data-side-visible="false"] .side-tabs button {
     width: 100%;
-    padding: 0 10px;
+    padding: 0;
   }
 
   .workspace[data-side-visible="false"] .nav-label {
-    display: inline;
+    display: none;
   }
 
   .side-tabs .side-hide,

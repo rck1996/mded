@@ -260,13 +260,15 @@
 .side-panel-shell {
   grid-area: side;
   position: sticky;
-  top: calc(var(--workspace-pad) + var(--topbar-height) + var(--panel-gap));
+  top: var(--side-tabs-top, calc(var(--workspace-pad) + var(--topbar-height) + var(--panel-gap)));
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-columns: var(--side-rail-width) minmax(0, 1fr);
+  grid-template-areas: "activity panel";
   gap: 10px;
   align-self: start;
   min-width: 0;
-  max-height: calc(100vh - var(--workspace-pad) - var(--topbar-height) - var(--panel-gap) - 16px);
+  height: calc(100vh - var(--side-tabs-top, calc(var(--workspace-pad) + var(--topbar-height) + var(--panel-gap))) - var(--workspace-pad));
+  max-height: calc(100vh - var(--side-tabs-top, calc(var(--workspace-pad) + var(--topbar-height) + var(--panel-gap))) - var(--workspace-pad));
 }
 
 .editor-panel {
@@ -324,7 +326,8 @@
 }
 
 .workspace[data-side-visible="false"] .side-panel-shell {
-  grid-template-rows: auto;
+  grid-template-columns: var(--side-rail-width);
+  grid-template-areas: "activity";
 }
 
 .workspace[data-side-visible="false"] .documents-panel,

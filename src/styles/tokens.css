@@ -38,8 +38,8 @@
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --workspace-pad: 16px;
   --topbar-height: 68px;
-  --side-width: 286px;
-  --side-rail-width: 58px;
+  --side-width: 336px;
+  --side-rail-width: 52px;
   --panel-gap: 14px;
   --reading-width: 860px;
 }

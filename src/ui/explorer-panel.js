@@ -48,6 +48,13 @@ export const renderExplorerPanel = ({
 }) => {
   container.replaceChildren();
 
+  const createIcon = (name, className = "") => {
+    const icon = document.createElement("span");
+    icon.className = `explorer-icon explorer-icon-${name}${className ? ` ${className}` : ""}`;
+    icon.setAttribute("aria-hidden", "true");
+    return icon;
+  };
+
   const parsePayload = (event) => {
     try {
       return JSON.parse(event.dataTransfer.getData("application/json"));
@@ -131,9 +138,7 @@ export const renderExplorerPanel = ({
       const button = document.createElement("button");
       button.type = "button";
       button.className = "document-item";
-      const icon = document.createElement("span");
-      icon.className = "document-icon";
-      icon.textContent = "MD";
+      const icon = createIcon("markdown", "document-icon");
       const meta = document.createElement("span");
       meta.className = "document-meta";
       const titleRow = document.createElement("span");
@@ -145,12 +150,13 @@ export const renderExplorerPanel = ({
       if (doc.favorite) {
         const favoriteTag = document.createElement("span");
         favoriteTag.className = "document-favorite";
-        favoriteTag.textContent = "★";
+        favoriteTag.textContent = "";
         favoriteTag.setAttribute("aria-label", "Favorito");
+        favoriteTag.title = "Favorito";
         titleRow.appendChild(favoriteTag);
       }
       const date = document.createElement("small");
-      date.textContent = `${foldersById.get(getDocumentFolderId(doc))?.name || "General"} · ${formatRelativeDocumentTime(doc.updatedAt)}`;
+      date.textContent = `${foldersById.get(getDocumentFolderId(doc))?.name || "General"} / ${formatRelativeDocumentTime(doc.updatedAt)}`;
       meta.append(titleRow, date);
       button.append(icon, meta);
       button.addEventListener("click", () => onOpenDocument(doc));
@@ -161,7 +167,7 @@ export const renderExplorerPanel = ({
     actions.className = "document-actions-inline document-menu";
     const actionsSummary = document.createElement("summary");
     actionsSummary.setAttribute("aria-label", `Acciones de ${doc.title}`);
-    actionsSummary.textContent = "⋯";
+    actionsSummary.appendChild(createIcon("more"));
     const actionsContent = document.createElement("div");
     actionsContent.className = "document-menu-content";
 
@@ -252,17 +258,6 @@ export const renderExplorerPanel = ({
     return row;
   };
 
-  if (!query && explorerFilter === "all" && recentDocuments.length) {
-    const recentGroup = document.createElement("section");
-    recentGroup.className = "explorer-section explorer-recent";
-    const header = document.createElement("div");
-    header.className = "explorer-section-header";
-    header.innerHTML = "<strong>Recientes</strong><span>Actividad reciente</span>";
-    recentGroup.appendChild(header);
-    recentDocuments.slice(0, 4).forEach((doc) => recentGroup.appendChild(createDocumentRow(doc)));
-    container.appendChild(recentGroup);
-  }
-
   folders.forEach((folder) => {
     const folderDocuments = visibleDocuments
       .filter((doc) => getDocumentFolderId(doc) === folder.id)
@@ -305,7 +300,9 @@ export const renderExplorerPanel = ({
     toggle.type = "button";
     toggle.className = "folder-toggle";
     toggle.setAttribute("aria-expanded", String(!isCollapsed));
-    toggle.textContent = isCollapsed ? ">" : "v";
+    toggle.setAttribute("aria-label", isCollapsed ? "Abrir carpeta" : "Cerrar carpeta");
+    toggle.dataset.collapsed = String(isCollapsed);
+    toggle.appendChild(createIcon("chevron"));
     toggle.addEventListener("click", () => onToggleFolderCollapsed(folder.id, collapsedFolders));
 
     const editingFolder = explorerEditState?.type === "folder" && explorerEditState.id === folder.id;
@@ -314,9 +311,7 @@ export const renderExplorerPanel = ({
     label.className = "folder-label";
     if (!editingFolder) label.addEventListener("click", () => onToggleFolderCollapsed(folder.id, collapsedFolders));
 
-    const folderIcon = document.createElement("span");
-    folderIcon.className = "folder-icon";
-    folderIcon.textContent = "DIR";
+    const folderIcon = createIcon(isCollapsed ? "folder" : "folder-open", "folder-icon");
     if (editingFolder) {
       const folderMeta = document.createElement("span");
       folderMeta.className = "folder-meta";
@@ -332,6 +327,7 @@ export const renderExplorerPanel = ({
       const name = document.createElement("span");
       name.textContent = folder.name;
       const count = document.createElement("small");
+      count.className = "folder-count";
       count.textContent = `${folderDocuments.length} ${folderDocuments.length === 1 ? "documento" : "documentos"}`;
       const folderMeta = document.createElement("span");
       folderMeta.className = "folder-meta";
@@ -343,7 +339,7 @@ export const renderExplorerPanel = ({
     folderActions.className = "folder-actions folder-menu";
     const folderSummary = document.createElement("summary");
     folderSummary.setAttribute("aria-label", `Acciones de carpeta ${folder.name}`);
-    folderSummary.textContent = "⋯";
+    folderSummary.appendChild(createIcon("more"));
     const folderMenuContent = document.createElement("div");
     folderMenuContent.className = "folder-menu-content";
 
@@ -508,7 +504,7 @@ export const renderExplorerPanel = ({
       row.className = "trash-row";
       const label = document.createElement("div");
       label.className = "trash-meta";
-      label.innerHTML = `<strong>${escapeHtml(doc.title)}</strong><span>${foldersById.get(getDocumentFolderId(doc))?.name || "General"} · ${formatRelativeDocumentTime(doc.archivedAt || doc.updatedAt)}</span>`;
+      label.innerHTML = `<strong>${escapeHtml(doc.title)}</strong><span>${foldersById.get(getDocumentFolderId(doc))?.name || "General"} / ${formatRelativeDocumentTime(doc.archivedAt || doc.updatedAt)}</span>`;
       const actions = document.createElement("div");
       actions.className = "trash-actions";
       const restore = document.createElement("button");
